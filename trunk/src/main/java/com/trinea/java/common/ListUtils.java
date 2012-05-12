@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class ListUtils {
 
-    private static final String defaultSeparator = ",";
+    public static final String DEFAULT_JOIN_SEPARATOR = ",";
 
     /**
      * 判断list是否为空或大小为0
@@ -41,7 +41,7 @@ public class ListUtils {
      * @return list中所有元素以默认分隔符拼接返回。若list为空或长度为0返回""
      */
     public static String join(List<String> list) {
-        return join(list, getDefaultSeparator());
+        return join(list, DEFAULT_JOIN_SEPARATOR);
     }
 
     /**
@@ -83,18 +83,17 @@ public class ListUtils {
             return "";
         }
         if (separator == null) {
-            separator = getDefaultSeparator();
+            separator = DEFAULT_JOIN_SEPARATOR;
         }
 
-        StringBuffer joinStr = new StringBuffer();
-        for (String entry : list) {
-            joinStr.append(entry).append(separator);
+        StringBuilder joinStr = new StringBuilder();
+        for (int i = 0; i < list.size(); i++) {
+            joinStr.append(list.get(i));
+            if (i != list.size() - 1) {
+                joinStr.append(separator);
+            }
         }
 
-        int lastIndexOfPosi = joinStr.lastIndexOf(separator);
-        if (lastIndexOfPosi != -1 && lastIndexOfPosi == (joinStr.length() - separator.length())) {
-            return joinStr.substring(0, joinStr.length() - separator.length());
-        }
         return joinStr.toString();
     }
 
@@ -158,10 +157,6 @@ public class ListUtils {
         return sourceCount - sourceList.size();
     }
 
-    public static String getDefaultSeparator() {
-        return defaultSeparator;
-    }
-
     /**
      * 向list中新增value
      * 
@@ -206,7 +201,7 @@ public class ListUtils {
             return sourceList;
         }
 
-        List<V> invertList = new ArrayList<V>();
+        List<V> invertList = new ArrayList<V>(sourceList.size());
         for (int i = sourceList.size() - 1; i >= 0; i--) {
             invertList.add(sourceList.get(i));
         }

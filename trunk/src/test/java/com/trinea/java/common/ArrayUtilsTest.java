@@ -18,7 +18,7 @@ public class ArrayUtilsTest extends TestCase {
     }
 
     public void testIsEmpty() {
-        assertTrue(ArrayUtils.isEmpty(null));
+        assertTrue(ArrayUtils.isEmpty((Object[])null));
 
         String[] strArray = new String[] {"aa"};
         assertFalse(ArrayUtils.isEmpty(strArray));

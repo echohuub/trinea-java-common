@@ -92,7 +92,6 @@ public class ObjectUtils {
      * <li>v1大于v2返回1</li>
      * <li>v1等于v2返回0</li>
      * <li>v1小于v2返回-1</li>
-     * <li>比较出现异常返回-2，对于不同类型比较可能出现异常</li>
      * </ul>
      * <strong>关于比较的规则</strong>
      * <ul>
@@ -108,10 +107,6 @@ public class ObjectUtils {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <V> int compare(V v1, V v2) {
-        try {
-            return v1 == null ? (v2 == null ? 0 : -1) : (v2 == null ? 1 : ((Comparable)v1).compareTo(v2));
-        } catch (Exception e) {
-            return -2;
-        }
+        return v1 == null ? (v2 == null ? 0 : -1) : (v2 == null ? 1 : ((Comparable)v1).compareTo(v2));
     }
 }

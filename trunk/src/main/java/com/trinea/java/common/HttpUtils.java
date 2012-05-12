@@ -101,7 +101,7 @@ public class HttpUtils {
      *         </ul>
      */
     public static String getUrlWithParas(String url, Map<String, String> parasMap) {
-        StringBuffer urlWithParas = new StringBuffer(StringUtils.isEmpty(url) ? "" : url);
+        StringBuilder urlWithParas = new StringBuilder(StringUtils.isEmpty(url) ? "" : url);
         String paras = getParas(parasMap);
         if (!StringUtils.isEmpty(paras)) {
             urlWithParas.append(URL_AND_PARA_SEPARATOR).append(paras);
@@ -127,7 +127,7 @@ public class HttpUtils {
      *         </ul>
      */
     public static String getUrlWithOrderedParas(String url, Map<String, String> parasMap) {
-        StringBuffer urlWithParas = new StringBuffer(StringUtils.isEmpty(url) ? "" : url);
+        StringBuilder urlWithParas = new StringBuilder(StringUtils.isEmpty(url) ? "" : url);
         String paras = getOrderedParas(parasMap);
         if (!StringUtils.isEmpty(paras)) {
             urlWithParas.append(URL_AND_PARA_SEPARATOR).append(paras);
@@ -147,7 +147,7 @@ public class HttpUtils {
      *         </ul>
      */
     public static String getUrlWithValueEncodeParas(String url, Map<String, String> parasMap) {
-        StringBuffer urlWithParas = new StringBuffer(StringUtils.isEmpty(url) ? "" : url);
+        StringBuilder urlWithParas = new StringBuilder(StringUtils.isEmpty(url) ? "" : url);
         String paras = getValueEncodeParas(parasMap);
         if (!StringUtils.isEmpty(paras)) {
             urlWithParas.append(URL_AND_PARA_SEPARATOR).append(paras);
@@ -167,7 +167,7 @@ public class HttpUtils {
      *         </ul>
      */
     public static String getUrlWithOrderedValueEncodeParas(String url, Map<String, String> parasMap) {
-        StringBuffer urlWithParas = new StringBuffer(StringUtils.isEmpty(url) ? "" : url);
+        StringBuilder urlWithParas = new StringBuilder(StringUtils.isEmpty(url) ? "" : url);
         String paras = getOrderedValueEncodeParas(parasMap);
         if (!StringUtils.isEmpty(paras)) {
             urlWithParas.append(URL_AND_PARA_SEPARATOR).append(paras);
@@ -190,7 +190,7 @@ public class HttpUtils {
      *         </ul>
      */
     public static String getParas(Map<String, String> parasMap) {
-        StringBuffer paras = new StringBuffer("");
+        StringBuilder paras = new StringBuilder("");
         if (parasMap != null && parasMap.size() > 0) {
             Iterator<Map.Entry<String, String>> ite = parasMap.entrySet().iterator();
             while (ite.hasNext()) {
@@ -240,7 +240,7 @@ public class HttpUtils {
      *         </ul>
      */
     public static String getValueEncodeParas(Map<String, String> parasMap) {
-        StringBuffer paras = new StringBuffer("");
+        StringBuilder paras = new StringBuilder("");
         if (parasMap != null && parasMap.size() > 0) {
             Iterator<Map.Entry<String, String>> ite = parasMap.entrySet().iterator();
             while (ite.hasNext()) {

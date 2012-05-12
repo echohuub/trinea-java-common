@@ -33,7 +33,7 @@ public class JUnitTestUtils {
      * @param expected
      * @return
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     public static boolean assertEquals(Map actual, Map expected) {
         if (actual == null || expected == null) {
             return (actual == null && expected == null);

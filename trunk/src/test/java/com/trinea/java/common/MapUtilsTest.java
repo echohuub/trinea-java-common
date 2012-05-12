@@ -40,39 +40,39 @@ public class MapUtilsTest extends TestCase {
     }
 
     public void testPutMapNotEmptyValueMapOfStringStringStringString() {
-        assertFalse(MapUtils.putMapNotEmptyValue(null, null, null));
+        assertFalse(MapUtils.putMapNotEmptyKeyAndValue(null, null, null));
 
         Map<String, String> sourceMap = new HashMap<String, String>();
-        assertFalse(MapUtils.putMapNotEmptyValue(sourceMap, null, null));
-        assertFalse(MapUtils.putMapNotEmptyValue(sourceMap, "", null));
+        assertFalse(MapUtils.putMapNotEmptyKeyAndValue(sourceMap, null, null));
+        assertFalse(MapUtils.putMapNotEmptyKeyAndValue(sourceMap, "", null));
         assertTrue(sourceMap.size() == 0);
 
-        assertFalse(MapUtils.putMapNotEmptyValue(sourceMap, null, "b"));
-        assertFalse(MapUtils.putMapNotEmptyValue(sourceMap, "", "b"));
-        assertFalse(MapUtils.putMapNotEmptyValue(sourceMap, "a", null));
-        assertFalse(MapUtils.putMapNotEmptyValue(sourceMap, "a", ""));
+        assertFalse(MapUtils.putMapNotEmptyKeyAndValue(sourceMap, null, "b"));
+        assertFalse(MapUtils.putMapNotEmptyKeyAndValue(sourceMap, "", "b"));
+        assertFalse(MapUtils.putMapNotEmptyKeyAndValue(sourceMap, "a", null));
+        assertFalse(MapUtils.putMapNotEmptyKeyAndValue(sourceMap, "a", ""));
         assertTrue(sourceMap.size() == 0);
 
-        assertTrue(MapUtils.putMapNotEmptyValue(sourceMap, "a", "b"));
+        assertTrue(MapUtils.putMapNotEmptyKeyAndValue(sourceMap, "a", "b"));
         assertTrue(sourceMap.size() > 0);
     }
 
-    public void testPutMapNotEmptyValueMapOfStringStringStringStringString() {
-        assertFalse(MapUtils.putMapNotEmptyValue(null, null, null, null));
+    public void testputMapNotEmptyKeyAndValueMapOfStringStringStringStringString() {
+        assertFalse(MapUtils.putMapNotEmptyKeyAndValue(null, null, null, null));
 
         Map<String, String> sourceMap = new HashMap<String, String>();
-        assertFalse(MapUtils.putMapNotEmptyValue(sourceMap, null, null, null));
-        assertFalse(MapUtils.putMapNotEmptyValue(sourceMap, "", null, null));
-        assertFalse(MapUtils.putMapNotEmptyValue(sourceMap, "", "b", null));
+        assertFalse(MapUtils.putMapNotEmptyKeyAndValue(sourceMap, null, null, null));
+        assertFalse(MapUtils.putMapNotEmptyKeyAndValue(sourceMap, "", null, null));
+        assertFalse(MapUtils.putMapNotEmptyKeyAndValue(sourceMap, "", "b", null));
         assertTrue(sourceMap.size() == 0);
 
-        assertTrue(MapUtils.putMapNotEmptyValue(sourceMap, "a", null, "b"));
+        assertTrue(MapUtils.putMapNotEmptyKeyAndValue(sourceMap, "a", null, "b"));
         assertTrue(sourceMap.size() > 0);
         assertTrue(sourceMap.containsKey("a") && sourceMap.get("a").equals("b"));
-        assertTrue(MapUtils.putMapNotEmptyValue(sourceMap, "c", "", "d"));
+        assertTrue(MapUtils.putMapNotEmptyKeyAndValue(sourceMap, "c", "", "d"));
         assertTrue(sourceMap.size() > 0);
         assertTrue(sourceMap.containsKey("c") && sourceMap.get("c").equals("d"));
-        assertTrue(MapUtils.putMapNotEmptyValue(sourceMap, "e", "f", "g"));
+        assertTrue(MapUtils.putMapNotEmptyKeyAndValue(sourceMap, "e", "f", "g"));
         assertTrue(sourceMap.size() > 0);
         assertTrue(sourceMap.containsKey("e") && sourceMap.get("e").equals("f"));
     }
@@ -95,4 +95,75 @@ public class MapUtilsTest extends TestCase {
         assertTrue("h".equals((MapUtils.getKeyByValue(sourceMap, null))));
     }
 
+    public void testParseKeyAndValueToMapStringStringStringString() {
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("", "", "", true), null));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap(null, "", "", true), null));
+        Map<String, String> parasMap = new HashMap<String, String>();
+        parasMap.put("a", "b");
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b,:", "", "", true), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b,  : d", "", "", true), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c ", "", "", true), parasMap));
+        parasMap.put("c", "");
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c: ", "", "", true), parasMap));
+        parasMap.remove("c");
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c ", "", "", false), parasMap));
+        parasMap.put(" c ", "");
+        parasMap.remove(" c ");
+        parasMap.put("c", "d");
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c : d", "", "", true), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c : d", ":", "", true), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c : d", ":", ",", true), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a=b, c = d", "=", ",", true), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a=b, c=d", "=", ",", true), parasMap));
+        parasMap.remove("c");
+
+        parasMap.put(" c ", " d");
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c : d", "", "", false), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c : d", ":", "", false), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c : d", ":", ",", false), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a=b, c = d", "=", ",", false), parasMap));
+        parasMap.remove(" c ");
+        parasMap.put(" c", "d");
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a=b, c=d", "=", ",", false), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a=b; c=d", "=", ";", false), parasMap));
+
+        parasMap.clear();
+        parasMap.put("\"a", "\"b");
+        parasMap.put("c", "\"d");
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("\"a:\"b, c : \"d", ":", ",", true),
+                                               parasMap));
+
+        parasMap.clear();
+        parasMap.put("'a'", "'b'");
+        parasMap.put("'c'", "d");
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("'a':'b', 'c' : d", ":", ",", true),
+                                               parasMap));
+
+        parasMap.clear();
+        parasMap.put("a=b", " c=d");
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a=b, c=d", ",", ";", false), parasMap));
+    }
+
+    public void testParseKeyAndValueToMapString() {
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap(null), null));
+        Map<String, String> parasMap = new HashMap<String, String>();
+        parasMap.put("a", "b");
+        parasMap.put("  c", " d");
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b,  c: d", false), parasMap));
+        parasMap.clear();
+        parasMap.put("a", "b");
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b,  : d", true), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b,  : d"), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c "), parasMap));
+        parasMap.put("c", "d");
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c : d"), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c : d"), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c : d"), parasMap));
+        assertTrue(JUnitTestUtils.assertEquals(MapUtils.parseKeyAndValueToMap("a:b, c : d"), parasMap));
+
+        assertTrue(MapUtils.parseKeyAndValueToMap("\"QQGenius\" : \"微博精灵\", \"renquan\" : \"任泉\", \"renzhiqiang\" : \"任志强\"") != null);
+        assertTrue(MapUtils.parseKeyAndValueToMap("\"QQGenius\":\"微博精灵\",\"renquan\":\"任泉\",\"renzhiqiang\":\"任志强\"") != null);
+        assertTrue(MapUtils.parseKeyAndValueToMap("\"QQGenius\":\"微博精灵\",\"renquan\":\"任泉\",\"renzhiqiang\":\"任志强\"",
+                                                  ":", ",", true) != null);
+    }
 }

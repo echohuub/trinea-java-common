@@ -2,63 +2,49 @@ package com.trinea.java.common;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * 字符串工具类，用于实现一些字符串的常用操作
+ * <ul>
+ * <li>继承自{@link org.apache.commons.lang3.StringUtils}</li>
+ * </ul>
  * 
  * @author Trinea 2011-7-22 上午12:36:29
  */
-public class StringUtils {
-
-    public static final String NUMBERS_AND_LETTERS         = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    public static final String NUMBERS                     = "0123456789";
-    public static final String LETTERS                     = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    public static final String CAPITAL_LETTERS             = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    public static final String LOWER_CASE_LETTERS          = "abcdefghijklmnopqrstuvwxyz";
-
-    public static final String defaultKeyAndValueSeparator = ":";
-    public static final String defaultValueEntitySeparator = ",";
-    public static final String defaultKeyOrValueQuote      = "\"";
+public class StringUtils extends org.apache.commons.lang3.StringUtils {
 
     /**
-     * 判断字符串是否为空或长度为0
+     * 比较两个String
      * 
-     * @param str
-     * @return 若字符串为null或长度为0, 返回true; 否则返回false.
-     * 
-     * <pre>
-     *      isEmpty(null)   =   true;
-     *      isEmpty("")     =   true;
-     *      isEmpty("  ")   =   false;
-     * </pre>
+     * @param actual
+     * @param expected
+     * @return
+     *         <ul>
+     *         <li>若两个字符串都为null，则返回true</li>
+     *         <li>若两个字符串都不为null，且相等，则返回true</li>
+     *         <li>否则返回false</li>
+     *         </ul>
      */
-    public static boolean isEmpty(String str) {
-        return (str == null || str.length() == 0);
+    public static boolean isEquals(String actual, String expected) {
+        return ObjectUtils.isEquals(actual, expected);
     }
 
     /**
-     * 判断字符串是否为空或长度为0，或仅由空格组成
+     * null字符串转换为长度为0的字符串
      * 
-     * @param str
-     * @return 若字符串为null或长度为0或仅由空格组成, 返回true; 否则返回false.
-     * 
+     * @param str 待转换字符串
+     * @return
+     * @see
      * <pre>
-     *      isBlank(null)   =   true;
-     *      isBlank("")     =   true;
-     *      isBlank("  ")   =   true;
-     *      isBlank("a")    =   false;
-     *      isBlank("a ")   =   false;
-     *      isBlank(" a")   =   false;
-     *      isBlank("a b")  =   false;
+     *  nullStrToEmpty(null)    =   "";
+     *  nullStrToEmpty("")      =   "";
+     *  nullStrToEmpty("aa")    =   "aa";
      * </pre>
      */
-    public static boolean isBlank(String str) {
-        return (isEmpty(str) || (str.trim().length() == 0));
+    public static String nullStrToEmpty(String str) {
+        return (str == null ? "" : str);
     }
 
     /**
@@ -77,8 +63,12 @@ public class StringUtils {
      * </pre>
      */
     public static String capitalizeFirstLetter(String str) {
-        return (isEmpty(str) || !Character.isLetter(str.charAt(0))) ? str : Character.toUpperCase(str.charAt(0))
-                                                                            + str.substring(1);
+        if (isEmpty(str)) {
+            return str;
+        }
+
+        char c = str.charAt(0);
+        return (!Character.isLetter(c) || Character.isUpperCase(c)) ? str : new StringBuilder(str.length()).append(Character.toUpperCase(c)).append(str.substring(1)).toString();
     }
 
     /**
@@ -92,15 +82,14 @@ public class StringUtils {
      * </pre>
      * 
      * @param str 原字符
-     * @return 编码后字符，编码错误返回null
+     * @return 编码后字符，若编码异常抛出异常
      */
     public static String utf8Encode(String str) {
         if (!isEmpty(str) && str.getBytes().length != str.length()) {
             try {
                 return URLEncoder.encode(str, "UTF-8");
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-                return null;
+                throw new RuntimeException("UnsupportedEncodingException occurred", e);
             }
         }
         return str;
@@ -110,7 +99,7 @@ public class StringUtils {
      * 如果不是普通字符，则按照utf8进行编码，编码异常则返回defultReturn
      * 
      * @param str 源字符串
-     * @param defultReturn 默认出错返回
+     * @param defultReturn 出现异常默认返回
      * @return
      */
     public static String utf8Encode(String str, String defultReturn) {
@@ -122,22 +111,6 @@ public class StringUtils {
             }
         }
         return str;
-    }
-
-    /**
-     * null字符串转换为长度为0的字符串
-     * 
-     * @param str 待转换字符串
-     * @return
-     * @see
-     * <pre>
-     *  nullStrToEmpty(null)    =   "";
-     *  nullStrToEmpty("")      =   "";
-     *  nullStrToEmpty("aa")    =   "aa";
-     * </pre>
-     */
-    public static String nullStrToEmpty(String str) {
-        return (str == null ? "" : str);
     }
 
     /**
@@ -179,99 +152,6 @@ public class StringUtils {
         return href;
     }
 
-    /**
-     * 得到固定长度的随机字符串，字符串由数字和字母混合组成
-     * 
-     * @param length 长度
-     * @return
-     * @see 见{@link StringUtils#getRandom(String source, int length)}
-     */
-    public static String getRandomNumbersAndLetters(int length) {
-        return getRandom(NUMBERS_AND_LETTERS, length);
-    }
-
-    /**
-     * 得到固定长度的随机字符串，字符串由数字混合组成
-     * 
-     * @param length 长度
-     * @return
-     * @see 见{@link StringUtils#getRandom(String source, int length)}
-     */
-    public static String getRandomNumbers(int length) {
-        return getRandom(NUMBERS, length);
-    }
-
-    /**
-     * 得到固定长度的随机字符串，字符串由字母混合组成
-     * 
-     * @param length 长度
-     * @return
-     * @see 见{@link StringUtils#getRandom(String source, int length)}
-     */
-    public static String getRandomLetters(int length) {
-        return getRandom(LETTERS, length);
-    }
-
-    /**
-     * 得到固定长度的随机字符串，字符串由大写字母混合组成
-     * 
-     * @param length 长度
-     * @return
-     * @see 见{@link StringUtils#getRandom(String source, int length)}
-     */
-    public static String getRandomCapitalLetters(int length) {
-        return getRandom(CAPITAL_LETTERS, length);
-    }
-
-    /**
-     * 得到固定长度的随机字符串，字符串由小写字母混合组成
-     * 
-     * @param length 长度
-     * @return
-     * @see 见{@link StringUtils#getRandom(String source, int length)}
-     */
-    public static String getRandomLowerCaseLetters(int length) {
-        return getRandom(LOWER_CASE_LETTERS, length);
-    }
-
-    /**
-     * 得到固定长度的随机字符串，字符串由source中字符混合组成
-     * 
-     * @param source 源字符串
-     * @param length 长度
-     * @return
-     *         <ul>
-     *         <li>若source为null或为空字符串，返回null</li>
-     *         <li>否则见{@link StringUtils#getRandom(char[] sourceChar, int length)}</li>
-     *         </ul>
-     */
-    public static String getRandom(String source, int length) {
-        return StringUtils.isEmpty(source) ? null : getRandom(source.toCharArray(), length);
-    }
-
-    /**
-     * 得到固定长度的随机字符串，字符串由sourceChar中字符混合组成
-     * 
-     * @param sourceChar 源字符数组
-     * @param length 长度
-     * @return
-     *         <ul>
-     *         <li>若sourceChar为null或长度为0，返回null</li>
-     *         <li>若length小于0，返回null</li>
-     *         </ul>
-     */
-    public static String getRandom(char[] sourceChar, int length) {
-        if (sourceChar == null || sourceChar.length == 0 || length < 0) {
-            return null;
-        }
-        StringBuffer str = new StringBuffer("");
-        Random random = new Random();
-        for (int i = 0; i < length; i++) {
-            str.append(sourceChar[random.nextInt(sourceChar.length)]);
-        }
-        return str.toString();
-    }
-
 /**
      * html的转移字符转换成正常的字符串
      * 
@@ -280,10 +160,10 @@ public class StringUtils {
      * htmlEscapeCharsToString("") = "";
      * htmlEscapeCharsToString("mp3") = "mp3";
      * htmlEscapeCharsToString("mp3&lt;") = "mp3<";
-     * htmlEscapeCharsToString("mp3&gt;") = "mp3>";
+     * htmlEscapeCharsToString("mp3&gt;") = "mp3\>";
      * htmlEscapeCharsToString("mp3&amp;mp4") = "mp3&mp4";
      * htmlEscapeCharsToString("mp3&quot;mp4") = "mp3\"mp4";
-     * htmlEscapeCharsToString("mp3&lt;&gt;&amp;&quot;mp4") = "mp3<>&\"mp4";
+     * htmlEscapeCharsToString("mp3&lt;&gt;&amp;&quot;mp4") = "mp3\<\>&\"mp4";
      * </pre>
      * 
      * @param source
@@ -295,109 +175,6 @@ public class StringUtils {
         } else {
             return source.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&").replaceAll("&quot;",
                                                                                                               "\"");
-        }
-    }
-
-    /**
-     * 比较两个String
-     * 
-     * @param actual
-     * @param expected
-     * @return
-     *         <ul>
-     *         <li>若两个字符串都为null，则返回true</li>
-     *         <li>若两个字符串都不为null，且相等，则返回true</li>
-     *         <li>否则返回false</li>
-     *         </ul>
-     */
-    public static boolean isEquals(String actual, String expected) {
-        return ObjectUtils.isEquals(actual, expected);
-    }
-
-    /**
-     * 将key和value键值对转换成map，结果会忽略key和value中的空格，忽略为空的key
-     * 
-     * <pre>
-     * parseKeyAndValueToMap("key1:value1,key2,value2", ":", ",")={(key1, value1), (key2, value2)}
-     * parseKeyAndValueToMap(" key1:value1 ,key2,value2", ":", ",")={(key1, value1), (key2, value2)}
-     * parseKeyAndValueToMap(" key1: value1 ,key2,value2", ":", ",")={(key1, value1), (key2, value2)}
-     * </pre>
-     * 
-     * @param source key和value键值对
-     * @param keyAndValueSeparator 键值对中key和value分隔符
-     * @param valueEntitySeparator 键值对中两个entity分隔符
-     * @param keyOrValueQuote 键值对中key或者value的引用号
-     * @return
-     */
-    public static Map<String, String> parseKeyAndValueToMap(String source, String keyAndValueSeparator,
-                                                            String valueEntitySeparator, String keyOrValueQuote) {
-        if (isEmpty(source)) {
-            return null;
-        }
-
-        if (isEmpty(keyAndValueSeparator)) {
-            keyAndValueSeparator = defaultKeyAndValueSeparator;
-        }
-        if (isEmpty(valueEntitySeparator)) {
-            valueEntitySeparator = defaultValueEntitySeparator;
-        }
-        if (isEmpty(keyOrValueQuote)) {
-            keyOrValueQuote = defaultKeyOrValueQuote;
-        }
-        Map<String, String> keyAndValueMap = new HashMap<String, String>();
-        String[] keyAndValueArray = source.split(valueEntitySeparator);
-        if (keyAndValueArray != null) {
-            int seperator;
-            for (String valueEntity : keyAndValueArray) {
-                if (!isEmpty(valueEntity)) {
-                    seperator = valueEntity.indexOf(keyAndValueSeparator);
-                    if (seperator != -1) {
-                        MapUtils.putMapNotEmptyKey(keyAndValueMap,
-                                                   RemoveBothSideSymbol(valueEntity.substring(0, seperator).trim(),
-                                                                        keyOrValueQuote),
-                                                   RemoveBothSideSymbol(valueEntity.substring(seperator + 1).trim(),
-                                                                        keyOrValueQuote));
-                    }
-                }
-            }
-        }
-        return keyAndValueMap;
-    }
-
-    /**
-     * 将key和value键值对转换成map，结果会忽略key和value中的空格，忽略为空的key
-     * 
-     * @param source key和value键值对
-     * @return
-     * @see
-     *      <ul>
-     *      <li>见{@link StringUtils#parseKeyAndValueToMap(String, String, String, String)}</li>
-     *      </ul>
-     */
-    public static Map<String, String> parseKeyAndValueToMap(String source) {
-        return parseKeyAndValueToMap(source, defaultKeyAndValueSeparator, defaultValueEntitySeparator,
-                                     defaultKeyOrValueQuote);
-    }
-
-    /**
-     * 去掉字符串两边的符号，返回去掉后的结果
-     * 
-     * @param source 原字符串
-     * @param symbol 符号
-     * @return
-     */
-    public static String RemoveBothSideSymbol(String source, String symbol) {
-        if (isEmpty(source) || isEmpty(symbol)) {
-            return source;
-        }
-
-        int firstIndex = source.indexOf(symbol);
-        int lastIndex = source.lastIndexOf(symbol);
-        try {
-            return source.substring(((firstIndex == 0) ? symbol.length() : 0),
-                                    ((lastIndex == source.length() - symbol.length()) ? (source.length() - symbol.length()) : source.length()));
-        } catch (IndexOutOfBoundsException e) {
-            return "";
         }
     }
 }

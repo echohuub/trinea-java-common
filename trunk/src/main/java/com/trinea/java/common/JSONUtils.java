@@ -8,6 +8,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * Json工具类
+ * 
+ * @author Trinea 2012-5-12 下午03:42:41
+ */
 public class JSONUtils {
 
     /**

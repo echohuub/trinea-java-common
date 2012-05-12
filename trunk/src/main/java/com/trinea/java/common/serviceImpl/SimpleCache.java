@@ -6,9 +6,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.trinea.java.common.MapUtils;
-import com.trinea.java.common.entity.CacheFullRemoveType;
 import com.trinea.java.common.entity.CacheObject;
 import com.trinea.java.common.service.Cache;
+import com.trinea.java.common.service.CacheFullRemoveType;
 
 /**
  * 小型缓存<br/>
@@ -44,22 +44,22 @@ import com.trinea.java.common.service.Cache;
 public class SimpleCache<K, V> implements Cache<K, V> {
 
     /** 默认缓存最大容量 **/
-    public static final int           DEFAULT_MAX_SIZE = 64;
+    public static final int              DEFAULT_MAX_SIZE = 64;
 
     /** 缓存最大容量 **/
-    private final int                 maxSize;
+    private final int                    maxSize;
 
     /** 有效时间，以毫秒计 **/
-    private final long                validTime;
+    private final long                   validTime;
 
     /** cache满时删除元素类型 **/
-    private final CacheFullRemoveType cacheFullRemoveType;
+    private final CacheFullRemoveType<V> cacheFullRemoveType;
 
     /** 缓存体 **/
-    protected Map<K, CacheObject<V>>  cache;
+    protected Map<K, CacheObject<V>>     cache;
 
     /** 命中次数和未命中次数 **/
-    protected AtomicLong              hitCount         = new AtomicLong(0), missCount = new AtomicLong(0);
+    protected AtomicLong                 hitCount         = new AtomicLong(0), missCount = new AtomicLong(0);
 
     /**
      * 初始化缓存
@@ -68,9 +68,13 @@ public class SimpleCache<K, V> implements Cache<K, V> {
      * @param validTime 缓存中元素有效时间，小于0表示元素不会失效，失效规则见{@link SimpleCache#isExpired(CacheObject)}
      * @param cacheFullRemoveType cache满时删除元素类型，见{@link CacheFullRemoveType}
      */
-    public SimpleCache(int maxSize, long validTime, CacheFullRemoveType cacheFullRemoveType){
+    public SimpleCache(int maxSize, long validTime, CacheFullRemoveType<V> cacheFullRemoveType){
         if (maxSize <= 0) {
             throw new IllegalArgumentException("The maxSize of cache must be greater than 0.");
+        }
+        if (cacheFullRemoveType == null) {
+            throw new IllegalArgumentException(
+                                               "The cacheFullRemoveType of cache must be a instance of CacheFullRemoveType.");
         }
         this.maxSize = maxSize;
         this.validTime = validTime < 0 ? -1 : validTime;
@@ -79,13 +83,13 @@ public class SimpleCache<K, V> implements Cache<K, V> {
     }
 
     /**
-     * 初始化缓存，默认元素不会失效，cache满时删除元素类型为{@link CacheFullRemoveType#ENTER_TIME_FIRST}
+     * 初始化缓存，默认元素不会失效，cache满时删除元素类型为{@link RemoveTypeEnterTimeFirst}
      * 
      * @param maxSize 缓存最大容量
      * @param validTime 缓存中元素有效时间，小于0表示元素不会失效
      */
     public SimpleCache(int maxSize, long validTime){
-        this(maxSize, validTime, CacheFullRemoveType.ENTER_TIME_FIRST);
+        this(maxSize, validTime, new RemoveTypeEnterTimeFirst<V>());
     }
 
     /**
@@ -94,12 +98,12 @@ public class SimpleCache<K, V> implements Cache<K, V> {
      * @param maxSize 缓存最大容量
      * @param cacheFullRemoveType cache满时删除元素类型，见{@link CacheFullRemoveType}
      */
-    public SimpleCache(int maxSize, CacheFullRemoveType cacheFullRemoveType){
+    public SimpleCache(int maxSize, CacheFullRemoveType<V> cacheFullRemoveType){
         this(maxSize, -1, cacheFullRemoveType);
     }
 
     /**
-     * 初始化缓存，默认元素不会失效，cache满时删除元素类型为{@link CacheFullRemoveType#ENTER_TIME_FIRST}
+     * 初始化缓存，默认元素不会失效，cache满时删除元素类型为{@link RemoveTypeEnterTimeFirst}
      * 
      * @param maxSize 缓存最大容量
      */
@@ -108,9 +112,7 @@ public class SimpleCache<K, V> implements Cache<K, V> {
     }
 
     /**
-     * 初始化缓存，默认大小为64，元素不会失效，cache满时删除元素类型为{@link CacheFullRemoveType#ENTER_TIME_FIRST}
-     * 
-     * @param maxSize 缓存最大容量
+     * 初始化缓存，默认大小为{@link SimpleCache#DEFAULT_MAX_SIZE}，元素不会失效，cache满时删除元素类型为 {@link RemoveTypeEnterTimeFirst}
      */
     public SimpleCache(){
         this(DEFAULT_MAX_SIZE, -1);
@@ -139,7 +141,7 @@ public class SimpleCache<K, V> implements Cache<K, V> {
      * 
      * @return
      */
-    public CacheFullRemoveType getCacheFullRemoveType() {
+    public CacheFullRemoveType<V> getCacheFullRemoveType() {
         return cacheFullRemoveType;
     }
 
@@ -182,16 +184,13 @@ public class SimpleCache<K, V> implements Cache<K, V> {
     @Override
     public CacheObject<V> get(K key) {
         CacheObject<V> obj = cache.get(key);
-        if (isExpired(obj)) {
-            return null;
-        } else {
-            if (obj != null) {
-                hitCount.incrementAndGet();
-                setUsedInfo(obj);
-            } else {
-                missCount.incrementAndGet();
-            }
+        if (!isExpired(obj) && obj != null) {
+            hitCount.incrementAndGet();
+            setUsedInfo(obj);
             return obj;
+        } else {
+            missCount.incrementAndGet();
+            return null;
         }
     }
 
@@ -231,7 +230,7 @@ public class SimpleCache<K, V> implements Cache<K, V> {
      * <li>若元素个数{@link SimpleCache#getSize()}小于最大容量，直接put进入，否则</li>
      * <li>若有效元素个数{@link SimpleCache#getValidSize()}小于元素个数{@link SimpleCache#getSize()}，去除无效元素
      * {@link SimpleCache#removeExpired()}后直接put进入，否则</li>
-     * <li>若{@link SimpleCache#cacheFullRemoveType}等于{@link CacheFullRemoveType#NOT_REMOVE}，直接返回null，否则</li>
+     * <li>若{@link SimpleCache#cacheFullRemoveType}是{@link RemoveTypeNotRemove}的实例，直接返回null，否则</li>
      * <li>按{@link SimpleCache#cacheFullRemoveType}删除元素后直接put进入</li>
      * </ul>
      * 
@@ -247,7 +246,7 @@ public class SimpleCache<K, V> implements Cache<K, V> {
                     return;
                 }
             } else {
-                if (cacheFullRemoveType == CacheFullRemoveType.NOT_REMOVE) {
+                if (cacheFullRemoveType instanceof RemoveTypeNotRemove) {
                     return;
                 }
                 if (fullRemoveOne() == null) {
@@ -298,7 +297,7 @@ public class SimpleCache<K, V> implements Cache<K, V> {
     /**
      * 缓存满时从缓存中按照{@link SimpleCache#cacheFullRemoveType}规则删除一个元素
      * <ul>
-     * <li>若{@link SimpleCache#cacheFullRemoveType}为{@link CacheFullRemoveType#NOT_REMOVE}返回null，否则</li>
+     * <li>若{@link SimpleCache#cacheFullRemoveType}是{@link RemoveTypeNotRemove}的实例返回null，否则</li>
      * <li>按{@link SimpleCache#cacheFullRemoveType}从未过期元素中查找删除的元素删除，未查找到返回null</li>
      * </ul>
      * 
@@ -306,7 +305,7 @@ public class SimpleCache<K, V> implements Cache<K, V> {
      * @return 返回删除的元素
      */
     protected CacheObject<V> fullRemoveOne() {
-        if (MapUtils.isEmpty(cache) || cacheFullRemoveType == CacheFullRemoveType.NOT_REMOVE) {
+        if (MapUtils.isEmpty(cache) || cacheFullRemoveType instanceof RemoveTypeNotRemove) {
             return null;
         }
 
@@ -318,7 +317,7 @@ public class SimpleCache<K, V> implements Cache<K, V> {
                     valueToRemove = entry.getValue();
                     keyToRemove = entry.getKey();
                 } else {
-                    if (compare(entry.getValue(), valueToRemove) < 0) {
+                    if (cacheFullRemoveType.compare(entry.getValue(), valueToRemove) < 0) {
                         valueToRemove = entry.getValue();
                         keyToRemove = entry.getKey();
                     }
@@ -329,32 +328,6 @@ public class SimpleCache<K, V> implements Cache<K, V> {
             cache.remove(keyToRemove);
         }
         return valueToRemove;
-    }
-
-    /**
-     * 比较两个元素<br/>
-     * <ul>
-     * </ul>
-     * <strong>关于比较的结果</strong>
-     * <ul>
-     * <li>obj1大于obj2返回1</li>
-     * <li>obj1等于obj2返回0</li>
-     * <li>obj1小于obj2返回-1</li>
-     * </ul>
-     * <strong>关于比较的规则</strong>
-     * <ul>
-     * <li>若obj1为null，obj2为null，则相等</li>
-     * <li>若obj1为null，obj2不为null，则obj1小于obj2</li>
-     * <li>若obj1不为null，则返回obj1的{@link CacheObject#compareTo(CacheObject, CacheFullRemoveType)}结果，函数参数为obj2和
-     * {@link SimpleCache#cacheFullRemoveType}</li>
-     * </ul>
-     * 
-     * @param obj1
-     * @param obj2
-     * @return
-     */
-    protected int compare(CacheObject<V> obj1, CacheObject<V> obj2) {
-        return obj1 == null ? (obj2 == null ? 0 : -1) : obj1.compareTo(obj2, cacheFullRemoveType);
     }
 
     /**

@@ -161,11 +161,21 @@ public class ObjectUtilsTest extends TestCase {
 
         /** int long **/
         assertEquals(ObjectUtils.compare(1, 1), 0);
-        assertEquals(ObjectUtils.compare(1l, 1), -2);
+        try {
+            ObjectUtils.compare(1l, 1);
+            assertTrue(false);
+        } catch (Exception e) {
+            assertTrue(true);
+        }
 
         /** double float, type of 1.2 is double default **/
         assertEquals(ObjectUtils.compare(1.2d, 1.2), 0);
-        assertEquals(ObjectUtils.compare(1.2f, 1.2), -2);
+        try {
+            ObjectUtils.compare(1.2f, 1.2);
+            assertTrue(false);
+        } catch (Exception e) {
+            assertTrue(true);
+        }
         assertEquals(ObjectUtils.compare(1.2f, 1.2f), 0);
 
         /** boolean **/
