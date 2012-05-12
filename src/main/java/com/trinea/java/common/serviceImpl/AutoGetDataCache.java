@@ -2,29 +2,33 @@ package com.trinea.java.common.serviceImpl;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 import com.trinea.java.common.ListUtils;
-import com.trinea.java.common.MapUtils;
 import com.trinea.java.common.ObjectUtils;
-import com.trinea.java.common.entity.CacheFullRemoveType;
 import com.trinea.java.common.entity.CacheObject;
+import com.trinea.java.common.service.CacheFullRemoveType;
 
 /**
- * 特殊类型缓存，在get某个key时自动获取新数据并缓存，可以同时向前或向后缓存多个数据，使得数据获取效率大大提高<br/>
+ * <strong>自动获取新数据的缓存</strong>，适用于获取数据较耗时的应用，如网络通讯、大数据量获取。<br/>
+ * <br/>
+ * 可用来自动获取新数据进行缓存。支持前后双向多个数据缓存，使得数据获取效率大大提高，下次使用该数据时不用实时获取直接读取缓存即可<br/>
+ * <br/>
  * <ul>
- * 缓存使用及设置
- * <li>缓存初始化同{@link SimpleCache}；使用{@link AutoGetDataCache#setForwardCacheNumber(int)}设置向前缓存个数，默认个数为
+ * 缓存设置及使用
+ * <li>使用下面缓存初始化中介绍的几种构造函数之一初始化缓存，使用{@link AutoGetDataCache#setForwardCacheNumber(int)}设置向前缓存个数，默认个数为
  * {@link AutoGetDataCache#DEFAULT_FORWARD_CACHE_SIZE}；使用{@link AutoGetDataCache#setBackCacheNumber(int)}设置向后缓存个数，默认个数为
  * {@link AutoGetDataCache#DEFAULT_BACK_CACHE_SIZE}</li>
- * <li>使用{@link AutoGetDataCache#getAndAutoCacheNewData(Object, List, boolean)}get某个key时自动获取新数据并缓存, 详细规则如下</li>
- * <li>使用{@link AutoGetDataCache#get(Object)}get某个key但不会自动获取新数据进行缓存</li>
+ * <li>使用{@link AutoGetDataCache#getAndAutoCacheNewData(Object, List)}get某个key，并且会自动获取新数据进行缓存</li>
+ * <li>使用{@link AutoGetDataCache#get(Object)}get某个key，但不会自动获取新数据进行缓存</li>
  * </ul>
  * <ul>
- * 自动缓存规则
- * <li>见{@link AutoGetDataCache#autoCacheNewData(Object, List, boolean)}</li>
+ * 缓存初始化
+ * <li>{@link AutoGetDataCache#AutoGetDataCache(GetDataInterface)}</li>
+ * <li>{@link AutoGetDataCache#AutoGetDataCache(int, GetDataInterface)}</li>
+ * <li>{@link AutoGetDataCache#AutoGetDataCache(int, long, GetDataInterface)}</li>
+ * <li>{@link AutoGetDataCache#AutoGetDataCache(int, long, CacheFullRemoveType, GetDataInterface)}</li>
  * </ul>
  * 
  * @author Trinea 2012-3-4 下午12:39:17
@@ -50,121 +54,181 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
     private Map<K, GetDataThread>  gettingDataThreadMap       = new ConcurrentHashMap<K, GetDataThread>();
 
     /**
-     * 获取某个key对应的值，并自动获取新数据缓存。如果只获取key对应值不获取新数据缓存，可使用{@link AutoGetDataCache#get(Object)}
-     * <ul>
-     * <li>new线程获取新数据进行缓存，缓存方法见{@link AutoGetDataCache#autoCacheNewData(Object, List, boolean)}，规则见
-     * {@link AutoGetDataCache}，keyList为空表示不进行缓存</li>
-     * <li>若该key为null，返回null并且不进行缓存</li>
-     * <li>若该key存在，返回该key对应的值</li>
-     * <li>若该key不存在，会自动调用其{@link GetDataInterface#getData(Object)}方法获取数据将其返回，getData为null时返回null</li>
-     * </ul>
+     * 获取某个key对应的值，并自动获取新数据进行缓存。如果只获取key对应值不获取新数据进行缓存，可使用{@link AutoGetDataCache#get(Object)}
      * 
      * @param key 待获取值的key
-     * @param keyList key list，为空表示不进行缓存
-     * @param isForward true表示向前缓存，false表示向后缓存
+     * @param keyList key list，按照该list中的key顺序进行缓存，为空表示不进行缓存。缓存设置见{@link AutoGetDataCache}
      * @return
      */
-    public CacheObject<V> getAndAutoCacheNewData(K key, List<K> keyList, boolean isForward) {
+    public CacheObject<V> getAndAutoCacheNewData(K key, List<K> keyList) {
         if (key == null) {
             return null;
         }
 
-        // 先进行预取
-        autoCacheNewData(key, keyList, isForward);
+        // 先前后进行预取
+        autoCacheNewDataForward(key, keyList, forwardCacheNumber);
+        autoCacheNewDataBack(key, keyList, backCacheNumber);
 
-        CacheObject<V> object = get(key);
+        return get(key);
+    }
+
+    /**
+     * 只获取key对应值不获取新数据进行缓存，如果想获取某个key对应的值，并自动获取新数据进行缓存可使用{@link AutoGetDataCache#getAndAutoCacheNewData(Object, List)}
+     * <ul>
+     * <li>若该key为null，返回null</li>
+     * <li>若key已在缓存中，返回该key对应的值</li>
+     * <li>若key不在缓存中，会自动调用其{@link GetDataInterface#getData(Object)}方法获取数据将其返回，getData为null时返回null</li>
+     * </ul>
+     * 
+     * @param key
+     * @return
+     */
+    @Override
+    public CacheObject<V> get(K key) {
+        if (key == null) {
+            return null;
+        }
+
+        CacheObject<V> object = super.get(key);
         if (object == null) {
-            GetDataThread getDataThread = getOneKey(key, isForward);
+            missCount.decrementAndGet();
+            GetDataThread getDataThread = gettingData(key);
             // 实时获取需要等待获取完成
             if (getDataThread != null) {
                 try {
                     getDataThread.getLatch().await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException("InterruptedException occurred", e);
                 }
-                object = get(key);
-                setUsedInfo(object);
             }
+            object = super.get(key);
         }
         return object;
     }
 
     /**
-     * 自动获取新数据缓存，返回获取的数据个数即new的线程数，小于等于要缓存的个数
+     * 自动向前获取新数据缓存
      * <ul>
-     * 缓存规则如下
-     * <li>从前(后)到后(前)依次循环keyList中每个元素，若向前(向后)缓存，则从等于key的元素的下一个元素开始判断; a.不在缓存中;
-     * b.没有其他线程正在获取该元素对应的数据时，new线程获取该元素对应的数据put进缓存，如此反复直到key前(后)第 {@link AutoGetDataCache#forwardCacheNumber} (
-     * {@link AutoGetDataCache#backCacheNumber})个元素或list尾(头)时结束</li>
+     * <strong>缓存规则如下:</strong><br/>
+     * 若key为null或list为空不进行缓存，否则从前到后依次循环keyList中每个元素，从等于key的元素的下一个元素开始按照下面规则判断，如此反复直到key前第cacheCount个元素或list尾时结束
+     * <li>若key已在缓存中，继续判断下一个元素，否则</li>
+     * <li>若某线程正在获取该key对应的数据，继续判断下一个元素，否则</li>
+     * <li>新建线程获取数据，继续判断下一个元素</li>
      * </ul>
      * 
-     * @param key 当前要获取值的key
-     * @param keyList key list，为空表示不进行缓存
-     * @param isForward true表示向前缓存，false表示向后缓存
-     * @return 预取的key已经存在的个数
+     * @param key 当前获取数据的key
+     * @param keyList key队列
+     * @param cacheCount 要缓存的个数
+     * @return 返回正在获取数据的key个数，即要缓存的个数减去已经在缓存中key的个数
      */
-    protected int autoCacheNewData(K key, List<K> keyList, boolean isForward) {
-        int cachingCount = 0;
+    protected int autoCacheNewDataForward(K key, List<K> keyList, int cacheCount) {
+        int gettingDataCount = 0;
         if (key != null && !ListUtils.isEmpty(keyList)) {
-            int beginIndex = isForward ? 0 : (keyList.size() - 1), toCacheCount = 0;
-            int maxCacheNumber = isForward ? forwardCacheNumber : backCacheNumber;
+            int cachedCount = 0;
             boolean beginCount = false;
-            int i = beginIndex;
-            while ((isForward ? i < keyList.size() : i >= 0) && toCacheCount <= maxCacheNumber) {
+            for (int i = 0; i < keyList.size() && cachedCount <= cacheCount; i++) {
                 K k = keyList.get(i);
-                i = (isForward ? ++i : --i);
-
                 if (ObjectUtils.isEquals(k, key)) {
                     beginCount = true;
                     continue;
                 }
+
                 if (k != null && beginCount) {
-                    toCacheCount++;
-                    if (getOneKey(k, isForward) == null) {
-                        cachingCount++;
+                    cachedCount++;
+                    if (gettingData(k) == null) {
+                        gettingDataCount++;
                     }
                 }
             }
         }
-        return cachingCount;
+        return gettingDataCount;
     }
 
     /**
-     * 获得某个key，若key不存在启线程获取
+     * 自动向后获取新数据缓存
+     * <ul>
+     * <strong>缓存规则如下:</strong><br/>
+     * 若key为null或list为空不进行缓存，否则从后到前依次循环keyList中每个元素，从等于key的元素的上一个元素开始按照下面规则判断，如此反复直到key后第cacheCount个元素或list头时结束
+     * <li>若key已在缓存中，继续判断上一个元素，否则</li>
+     * <li>若某线程正在获取该key对应的数据，继续判断上一个元素，否则</li>
+     * <li>新建线程获取数据，继续判断上一个元素</li>
+     * </ul>
      * 
-     * @param k
-     * @param isForward true表示向前缓存，false表示向后缓存
-     * @return 若已经在缓存中返回null，否则返回获取数据的线程
+     * @param key 当前获取数据的key
+     * @param keyList key队列
+     * @param cacheCount 要缓存的个数
+     * @return 返回正在获取数据的key个数，即要缓存的个数减去已经在缓存中key的个数
      */
-    protected synchronized GetDataThread getOneKey(K k, boolean isForward) {
-        if (containsKey(k)) {
+    protected int autoCacheNewDataBack(K key, List<K> keyList, int cacheCount) {
+        int gettingDataCount = 0;
+        if (key != null && !ListUtils.isEmpty(keyList)) {
+            int cachedCount = 0;
+            boolean beginCount = false;
+            for (int i = keyList.size() - 1; i >= 0 && cachedCount <= cacheCount; i--) {
+                K k = keyList.get(i);
+                if (ObjectUtils.isEquals(k, key)) {
+                    beginCount = true;
+                    continue;
+                }
+
+                if (k != null && beginCount) {
+                    cachedCount++;
+                    if (gettingData(k) == null) {
+                        gettingDataCount++;
+                    }
+                }
+            }
+        }
+        return gettingDataCount;
+    }
+
+    /**
+     * 返回正在获取某个key对应数据的线程
+     * <ul>
+     * <li>若key在缓存中，返回null，否则</li>
+     * <li>若某线程正在获取该key对应的数据，返回该线程，否则</li>
+     * <li>新建线程获取数据并返回该线程</li>
+     * </ul>
+     * 
+     * @param key
+     * @return
+     */
+    protected synchronized GetDataThread gettingData(K key) {
+        if (containsKey(key)) {
             return null;
         }
 
-        if (gettingDataThreadMap.containsKey(k)) {
-            return gettingDataThreadMap.get(k);
+        if (gettingDataThreadMap.containsKey(key)) {
+            return gettingDataThreadMap.get(key);
         }
 
-        GetDataThread getDataThread = new GetDataThread(this, k, isForward, getDataInterface);
-        gettingDataThreadMap.put(k, getDataThread);
+        GetDataThread getDataThread = new GetDataThread(this, key, getDataInterface);
+        gettingDataThreadMap.put(key, getDataThread);
         getDataThread.start();
         return getDataThread;
 
     }
 
     /**
+     * 构造函数，初始化缓存
+     * 
+     * @param maxSize 缓存最大容量
+     * @param validTime 缓存中元素有效时间，小于0表示元素不会失效，失效规则见{@link SimpleCache#isExpired(CacheObject)}的实现类
+     * @param cacheFullRemoveType cache满时删除元素类型，见{@link CacheFullRemoveType}
      * @param getDataInterface 获取数据的方法
-     * @param 其他参数 见{@link SimpleCache#SimpleCache(int, long, CacheFullRemoveType)}
      */
-    public AutoGetDataCache(int maxSize, long validTime, CacheFullRemoveType cacheFullRemoveType,
+    public AutoGetDataCache(int maxSize, long validTime, CacheFullRemoveType<V> cacheFullRemoveType,
                             GetDataInterface<K, V> getDataInterface){
         super(maxSize, validTime, cacheFullRemoveType);
         this.getDataInterface = getDataInterface;
     }
 
     /**
+     * 构造函数， 初始化缓存，cache满时删除元素类型为{@link RemoveTypeEnterTimeFirst}
+     * 
+     * @param maxSize 缓存最大容量
+     * @param validTime 缓存中元素有效时间，小于0表示元素不会失效，失效规则见{@link SimpleCache#isExpired(CacheObject)}的实现类
      * @param getDataInterface 获取数据的方法
-     * @param 其他参数 见{@link SimpleCache#SimpleCache(int, long)}
      */
     public AutoGetDataCache(int maxSize, long validTime, GetDataInterface<K, V> getDataInterface){
         super(maxSize, validTime);
@@ -172,6 +236,9 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
     }
 
     /**
+     * 构造函数，初始化缓存，默认元素不会失效，cache满时删除元素类型为{@link RemoveTypeEnterTimeFirst}
+     * 
+     * @param maxSize 缓存最大容量
      * @param getDataInterface 获取数据的方法
      * @param 其他参数 见{@link SimpleCache#SimpleCache(int)}
      */
@@ -181,8 +248,9 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
     }
 
     /**
+     * 构造函数，初始化缓存，默认大小为{@link SimpleCache#DEFAULT_MAX_SIZE}，元素不会失效，cache满时删除元素类型为 {@link RemoveTypeEnterTimeFirst}
+     * 
      * @param getDataInterface 获取数据的方法
-     * @param 其他参数 见{@link SimpleCache#SimpleCache()}
      */
     public AutoGetDataCache(GetDataInterface<K, V> getDataInterface){
         super();
@@ -199,7 +267,7 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
     }
 
     /**
-     * 设置自动向前缓存的个数，缓存规则见{@link AutoGetDataCache#autoCacheNewData(Object, List, boolean)}
+     * 设置自动向前缓存的个数
      * 
      * @param forwardCacheNumber
      */
@@ -217,7 +285,7 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
     }
 
     /**
-     * 设置自动向后缓存的个数，缓存规则见{@link AutoGetDataCache#autoCacheNewData(Object, List, boolean)}
+     * 设置自动向后缓存的个数
      * 
      * @param backCacheNumber
      */
@@ -226,7 +294,7 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
     }
 
     /**
-     * 得到getDataInterface
+     * 得到获取数据的方法
      * 
      * @return the getDataInterface
      */
@@ -235,7 +303,7 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
     }
 
     /**
-     * 设置getDataInterface
+     * 设置获取数据的方法
      * 
      * @param getDataInterface
      */
@@ -268,7 +336,6 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
 
         private AutoGetDataCache<K, V> cache;
         private K                      key;
-        private boolean                isForward;
         private GetDataInterface<K, V> getDataInterface;
 
         /** put结束的锁 **/
@@ -279,15 +346,12 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
          * 
          * @param cache 存储数据的缓存
          * @param key 获取数据的key
-         * @param isForward true表示向前缓存，false表示向后缓存
          * @param getDataInterface 获取数据的接口
          */
-        public GetDataThread(AutoGetDataCache<K, V> cache, K key, boolean isForward,
-                             GetDataInterface<K, V> getDataInterface){
+        public GetDataThread(AutoGetDataCache<K, V> cache, K key, GetDataInterface<K, V> getDataInterface){
             super("GetDataThread whose key is " + key);
             this.cache = cache;
             this.key = key;
-            this.isForward = isForward;
             this.getDataInterface = getDataInterface;
             finishPutLock = new CountDownLatch(1);
         }
@@ -296,11 +360,7 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
             if (key != null && getDataInterface != null && cache != null) {
                 CacheObject<V> object = getDataInterface.getData(key);
                 if (object != null) {
-                    if (isForward) {
-                        cache.put(key, object);
-                    } else {
-                        cache.putByOppositeRemove(key, object);
-                    }
+                    cache.put(key, object);
                 }
             }
             // 执行结束释放锁
@@ -320,72 +380,4 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
             return finishPutLock;
         }
     };
-
-    /**
-     * 向缓存中添加元素，并且在缓存已满时，从缓存中按照{@link SimpleCache#cacheFullRemoveType}相反地顺序删除一个元素
-     * <ul>
-     * <li>若元素个数{@link SimpleCache#getSize()}小于最大容量，直接put进入，否则</li>
-     * <li>若有效元素个数{@link SimpleCache#getValidSize()}小于元素个数{@link SimpleCache#getSize()}，去除无效元素
-     * {@link SimpleCache#removeExpired()}后直接put进入，否则</li>
-     * <li>若{@link SimpleCache#cacheFullRemoveType}等于{@link CacheFullRemoveType#NOT_REMOVE}，直接返回null，否则</li>
-     * <li>按{@link SimpleCache#cacheFullRemoveType}相反地顺序删除元素后直接put进入</li>
-     * </ul>
-     * 
-     * @param key key
-     * @param obj 元素
-     * @return
-     */
-    protected synchronized void putByOppositeRemove(K key, CacheObject<V> obj) {
-        if (getSize() >= getMaxSize()) {
-            if (getValidSize() < cache.size()) {
-                if (removeExpired() <= 0) {
-                    return;
-                }
-            } else {
-                if (getCacheFullRemoveType() == CacheFullRemoveType.NOT_REMOVE) {
-                    return;
-                }
-                if (fullOppositeRemoveOne() == null) {
-                    return;
-                }
-            }
-        }
-        cache.put(key, obj);
-    }
-
-    /**
-     * 从缓存中按照{@link SimpleCache#cacheFullRemoveType}相反地顺序删除一个元素
-     * <ul>
-     * <li>若{@link SimpleCache#cacheFullRemoveType}为{@link CacheFullRemoveType#NOT_REMOVE}返回null，否则</li>
-     * <li>按{@link SimpleCache#cacheFullRemoveType}相反的顺序从未过期元素中查找删除的元素删除，未查找到返回null</li>
-     * </ul>
-     * 
-     * @param key
-     * @return 返回删除的元素
-     */
-    protected CacheObject<V> fullOppositeRemoveOne() {
-        if (MapUtils.isEmpty(cache) || getCacheFullRemoveType() == CacheFullRemoveType.NOT_REMOVE) {
-            return null;
-        }
-
-        K keyToRemove = null;
-        CacheObject<V> valueToRemove = null;
-        for (Entry<K, CacheObject<V>> entry : cache.entrySet()) {
-            if (entry != null && !isExpired(entry.getValue())) {
-                if (valueToRemove == null) {
-                    valueToRemove = entry.getValue();
-                    keyToRemove = entry.getKey();
-                } else {
-                    if (compare(entry.getValue(), valueToRemove) > 0) {
-                        valueToRemove = entry.getValue();
-                        keyToRemove = entry.getKey();
-                    }
-                }
-            }
-        }
-        if (keyToRemove != null) {
-            cache.remove(keyToRemove);
-        }
-        return valueToRemove;
-    }
 }

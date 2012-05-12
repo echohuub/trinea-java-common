@@ -2,8 +2,6 @@ package com.trinea.java.common.entity;
 
 import java.io.Serializable;
 
-import com.trinea.java.common.ObjectUtils;
-
 /**
  * 缓存中的数据
  * 
@@ -93,77 +91,5 @@ public class CacheObject<V> implements Serializable {
 
     public void setData(V data) {
         this.data = data;
-    }
-
-    /**
-     * 比较两个元素<br/>
-     * <ul>
-     * </ul>
-     * <strong>关于比较的结果</strong>
-     * <ul>
-     * <li>当前元素大于obj返回1</li>
-     * <li>当前元素等于obj返回0</li>
-     * <li>当前元素小于obj返回-1</li>
-     * </ul>
-     * <strong>关于比较的规则</strong>
-     * <ul>
-     * <li>若obj为null，则当前元素大于obj返回1</li>
-     * <li>若obj不为null，则根据cacheFullRemoveType比较大小,</li>
-     * </ul>
-     * 
-     * @param obj
-     * @param cacheFullRemoveType
-     * @return
-     */
-    public int compareTo(CacheObject<V> obj, CacheFullRemoveType cacheFullRemoveType) {
-        if (obj == null) {
-            return 1;
-        }
-
-        switch (cacheFullRemoveType) {
-            case NOT_REMOVE:
-                return 0;
-            case ENTER_TIME_FIRST:
-                return compare(this.enterTime, obj.enterTime);
-            case ENTER_TIME_LAST:
-                return compare(obj.enterTime, this.enterTime);
-            case LAST_USED_TIME_FIRST:
-                return compare(this.lastUsedTime, obj.lastUsedTime);
-            case LAST_USED_TIME_LAST:
-                return compare(obj.lastUsedTime, this.lastUsedTime);
-            case USED_COUNT_SMALL:
-                return compare(this.usedCount, obj.usedCount);
-            case USED_COUNT_BIG:
-                return compare(obj.usedCount, this.usedCount);
-            case PRIORITY_LOW:
-                return compare(this.priority, obj.priority);
-            case PRIORITY_HIGH:
-                return compare(obj.priority, this.priority);
-            case DATA_SMALL:
-                return ObjectUtils.compare(this.data, obj.data);
-            case DATA_BIG:
-                return ObjectUtils.compare(obj.data, this.data);
-            default:
-                return compare(this.enterTime, obj.enterTime);
-        }
-    }
-
-    /**
-     * 比较两个数值<br/>
-     * <ul>
-     * </ul>
-     * <strong>关于比较的结果</strong>
-     * <ul>
-     * <li>l1大于l2返回1</li>
-     * <li>l1等于l2返回0</li>
-     * <li>l1小于l2返回-1</li>
-     * </ul>
-     * 
-     * @param l1
-     * @param l2
-     * @return
-     */
-    private int compare(long l1, long l2) {
-        return (l1 > l2) ? 1 : ((l1 == l2) ? 0 : -1);
     }
 }

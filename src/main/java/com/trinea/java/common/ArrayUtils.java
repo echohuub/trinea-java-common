@@ -3,30 +3,14 @@ package com.trinea.java.common;
 /**
  * array工具类
  * <ul>
- * <li>{@link ArrayUtils#isEmpty(Object[])}数组是否为空判断</li>
+ * <li>继承自{@link org.apache.commons.lang3.ArrayUtils}</li>
  * <li>{@link ArrayUtils#getLast(Object[], Object, Object, boolean)}得到array中某个元素（第一次发现）的前一个元素</li>
  * <li>{@link ArrayUtils#getNext(Object[], Object, Object, boolean)}得到array中某个元素（第一次发现）的后一个元素</li>
  * </ul>
  * 
  * @author Trinea 2011-10-24 下午08:21:11
  */
-public class ArrayUtils {
-
-    /**
-     * 判断array是否为空或大小为0
-     * 
-     * @param sourceArray
-     * @return 若array为null或长度为0, 返回true; 否则返回false.
-     * 
-     * <pre>
-     *      isEmpty(null)   =   true;
-     *      isEmpty({})     =   true;
-     *      isEmpty({1})    =   false;
-     * </pre>
-     */
-    public static <V> boolean isEmpty(V[] sourceArray) {
-        return (sourceArray == null || sourceArray.length == 0);
-    }
+public class ArrayUtils extends org.apache.commons.lang3.ArrayUtils {
 
     /**
      * 得到array中某个元素（第一次发现）的前一个元素

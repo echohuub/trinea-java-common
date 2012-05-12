@@ -14,9 +14,10 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import com.trinea.java.common.entity.CacheFullRemoveType;
+import com.trinea.java.common.ObjectUtils;
 import com.trinea.java.common.entity.CacheObject;
 import com.trinea.java.common.serviceImpl.AutoGetDataCache.GetDataInterface;
+import com.trinea.java.common.utils.SleepUtils;
 
 /**
  * 类AutoGetDataCacheTest.java的实现描述：TODO 类实现描述
@@ -50,7 +51,7 @@ public class AutoGetDataCacheTest extends TestCase {
 
         // 新建缓存
         AutoGetDataCache<String, String> cache = null;
-        cache = new AutoGetDataCache<String, String>(5, -1, CacheFullRemoveType.ENTER_TIME_FIRST,
+        cache = new AutoGetDataCache<String, String>(5, -1, new RemoveTypeEnterTimeFirst<String>(),
                                                      new GetDataInterface<String, String>() {
 
                                                          @Override
@@ -63,12 +64,29 @@ public class AutoGetDataCacheTest extends TestCase {
         // 设置向后缓存1个，向前缓存2个
         cache.setBackCacheNumber(1);
         cache.setForwardCacheNumber(2);
+
+        CacheObject<String> value = cache.get(Integer.toString(0));
+        assertTrue(value != null && ObjectUtils.isEquals(value.getData(), Integer.toString(0)));
+        assertTrue(cache.getValidSize() == 1);
+        assertTrue(cache.getHitRate() == 1);
+        value = cache.getAndAutoCacheNewData(Integer.toString(2), keyList);
+        assertTrue(cache.getHitRate() == 1);
+        assertTrue(value != null && ObjectUtils.isEquals(value.getData(), Integer.toString(2)));
+        SleepUtils.sleep();
+        if (cache.getValidSize() == 5) {
+            value = cache.getAndAutoCacheNewData(Integer.toString(3), keyList);
+            assertTrue(cache.getHitRate() == 1);
+            value = cache.getAndAutoCacheNewData(Integer.toString(4), keyList);
+            assertTrue(cache.getHitRate() == 1);
+            value = cache.getAndAutoCacheNewData(Integer.toString(1), keyList);
+            assertTrue(cache.getHitRate() == 1);
+        }
+        value = cache.getAndAutoCacheNewData(Integer.toString(5), keyList);
     }
 
     /**
      * Test method for {@link com.trinea.java.common.serviceImpl.SimpleCache#getHitRate()}.
      */
     public void testGetHitRate() {
-        fail("Not yet implemented");
     }
 }

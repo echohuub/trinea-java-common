@@ -2,7 +2,6 @@ package com.trinea.java.common.serviceImpl;
 
 import junit.framework.TestCase;
 
-import com.trinea.java.common.entity.CacheFullRemoveType;
 import com.trinea.java.common.entity.CacheObject;
 import com.trinea.java.common.utils.SleepUtils;
 
@@ -17,8 +16,8 @@ public class SimpleCacheTest extends TestCase {
     long                        cache1ValidTime = 1000;
 
     protected void setUp() throws Exception {
-        cache1 = new SimpleCache<String, String>(cache3MaxSize, cache1ValidTime, CacheFullRemoveType.ENTER_TIME_FIRST);
-        cache2 = new SimpleCache<String, String>(cache2MaxSize, -1, CacheFullRemoveType.NOT_REMOVE);
+        cache1 = new SimpleCache<String, String>(cache3MaxSize, cache1ValidTime, new RemoveTypeEnterTimeFirst<String>());
+        cache2 = new SimpleCache<String, String>(cache2MaxSize, -1, new RemoveTypeNotRemove<String>());
         cache3 = new SimpleCache<String, String>(cache3MaxSize);
         cache4 = new SimpleCache<String, String>();
         super.setUp();
@@ -29,7 +28,7 @@ public class SimpleCacheTest extends TestCase {
     }
 
     public void testSimpleCacheIntLongCacheFullRemoveType() {
-        SimpleCache<String, String> cache5 = new SimpleCache<String, String>(5, 1, CacheFullRemoveType.DATA_BIG);
+        SimpleCache<String, String> cache5 = new SimpleCache<String, String>(5, 1, new RemoveTypeDataBig<String>());
         assertTrue(cache5 != null);
     }
 
@@ -64,7 +63,7 @@ public class SimpleCacheTest extends TestCase {
     }
 
     public void testGetCacheFullRemoveType() {
-        assertTrue(cache2.getCacheFullRemoveType() == CacheFullRemoveType.NOT_REMOVE);
+        assertTrue(cache2.getCacheFullRemoveType() instanceof RemoveTypeNotRemove);
     }
 
     public void testGetSize() {
@@ -171,17 +170,6 @@ public class SimpleCacheTest extends TestCase {
         assertTrue(removeOne != null && removeOne.getData() != null && removeOne.getData().equals("cache1Value0"));
     }
 
-    public void testCompare() {
-        CacheObject<String> obj1 = new CacheObject<String>();
-        obj1.setData("aa");
-        obj1.setEnterTime(System.currentTimeMillis() - 1000);
-        CacheObject<String> obj2 = new CacheObject<String>();
-        obj2.setData("ab");
-        assertTrue(cache1.compare(null, null) == 0);
-        assertTrue(cache1.compare(obj1, null) > 0);
-        assertTrue(cache1.compare(obj1, obj2) < 0);
-    }
-
     public void testRemoveExpired() {
         cache1.clear();
         for (int i = 0; i < cache1MaxSize; i++) {
@@ -202,7 +190,7 @@ public class SimpleCacheTest extends TestCase {
     public void testRemoveByLastUsedTime() {
         int cacheSize = 5, putSize = cacheSize + 3;
         SimpleCache<String, String> cache = new SimpleCache<String, String>(cacheSize, -1,
-                                                                            CacheFullRemoveType.LAST_USED_TIME_FIRST);
+                                                                            new RemoveTypeLastUsedTimeFirst<String>());
         for (int i = 1; i <= putSize; i++) {
             cache.put(Integer.toString(i), Integer.toString(i));
             cache.get(Integer.toString(i));
@@ -213,7 +201,7 @@ public class SimpleCacheTest extends TestCase {
         assertTrue(cache.containsKey("4"));
         assertTrue(cache.containsKey(Integer.toString(putSize)));
 
-        cache = new SimpleCache<String, String>(cacheSize, -1, CacheFullRemoveType.LAST_USED_TIME_LAST);
+        cache = new SimpleCache<String, String>(cacheSize, -1, new RemoveTypeLastUsedTimeLast<String>());
         for (int i = 1; i <= putSize; i++) {
             cache.put(Integer.toString(i), Integer.toString(i));
             cache.get(Integer.toString(i));
@@ -229,7 +217,7 @@ public class SimpleCacheTest extends TestCase {
     public void testRemoveByUsedCount() {
         int cacheSize = 5, putSize = cacheSize + 3;
         SimpleCache<String, String> cache = new SimpleCache<String, String>(cacheSize, -1,
-                                                                            CacheFullRemoveType.USED_COUNT_SMALL);
+                                                                            new RemoveTypeUsedCountSmall<String>());
         for (int i = 1; i <= putSize; i++) {
             cache.put(Integer.toString(i), Integer.toString(i));
             for (int j = 0; j < i; j++) {
@@ -241,7 +229,7 @@ public class SimpleCacheTest extends TestCase {
         assertTrue(cache.containsKey("4"));
         assertTrue(cache.containsKey(Integer.toString(putSize)));
 
-        cache = new SimpleCache<String, String>(cacheSize, -1, CacheFullRemoveType.USED_COUNT_BIG);
+        cache = new SimpleCache<String, String>(cacheSize, -1, new RemoveTypeUsedCountBig<String>());
         for (int i = 1; i <= putSize; i++) {
             cache.put(Integer.toString(i), Integer.toString(i));
             for (int j = 0; j < i; j++) {
@@ -258,7 +246,7 @@ public class SimpleCacheTest extends TestCase {
     public void testRemoveByPriority() {
         int cacheSize = 5, putSize = cacheSize + 3;
         SimpleCache<String, String> cache = new SimpleCache<String, String>(cacheSize, -1,
-                                                                            CacheFullRemoveType.PRIORITY_LOW);
+                                                                            new RemoveTypePriorityLow<String>());
         for (int i = 1; i <= putSize; i++) {
             CacheObject<String> obj = new CacheObject<String>();
             obj.setData(Integer.toString(i));
@@ -270,7 +258,7 @@ public class SimpleCacheTest extends TestCase {
         assertTrue(cache.containsKey("4"));
         assertTrue(cache.containsKey(Integer.toString(putSize)));
 
-        cache = new SimpleCache<String, String>(cacheSize, -1, CacheFullRemoveType.PRIORITY_HIGH);
+        cache = new SimpleCache<String, String>(cacheSize, -1, new RemoveTypePriorityHigh<String>());
         for (int i = 1; i <= putSize; i++) {
             CacheObject<String> obj = new CacheObject<String>();
             obj.setData(Integer.toString(i));
@@ -287,7 +275,7 @@ public class SimpleCacheTest extends TestCase {
     public void testRemoveByData() {
         int cacheSize = 5, putSize = cacheSize + 3;
         SimpleCache<String, Integer> cache = new SimpleCache<String, Integer>(cacheSize, -1,
-                                                                              CacheFullRemoveType.DATA_SMALL);
+                                                                              new RemoveTypeDataSmall<Integer>());
         for (int i = 1; i <= putSize; i++) {
             CacheObject<Integer> obj = new CacheObject<Integer>();
             obj.setData(i);
@@ -299,7 +287,7 @@ public class SimpleCacheTest extends TestCase {
         assertTrue(cache.containsKey("4"));
         assertTrue(cache.containsKey(Integer.toString(putSize)));
 
-        cache = new SimpleCache<String, Integer>(cacheSize, -1, CacheFullRemoveType.DATA_BIG);
+        cache = new SimpleCache<String, Integer>(cacheSize, -1, new RemoveTypeDataBig<Integer>());
         for (int i = 1; i <= putSize; i++) {
             CacheObject<Integer> obj = new CacheObject<Integer>();
             obj.setData(i);
@@ -316,7 +304,7 @@ public class SimpleCacheTest extends TestCase {
     public void testGetHitRate() {
         int cacheSize = 5, putSize = cacheSize + 3;
         SimpleCache<String, String> cache = new SimpleCache<String, String>(cacheSize, -1,
-                                                                            CacheFullRemoveType.PRIORITY_LOW);
+                                                                            new RemoveTypePriorityLow<String>());
         for (int i = 1; i <= putSize; i++) {
             CacheObject<String> obj = new CacheObject<String>();
             obj.setData(Integer.toString(i));
