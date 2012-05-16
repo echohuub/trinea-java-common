@@ -1,11 +1,13 @@
 package com.trinea.java.common.serviceImpl;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.trinea.java.common.MapUtils;
+import com.trinea.java.common.SerializeUtils;
 import com.trinea.java.common.entity.CacheObject;
 import com.trinea.java.common.service.Cache;
 import com.trinea.java.common.service.CacheFullRemoveType;
@@ -17,6 +19,8 @@ import com.trinea.java.common.service.CacheFullRemoveType;
  * <li>使用下面缓存初始化中介绍的几种构造函数之一初始化缓存</li>
  * <li>使用{@link SimpleCache#put(Object, CacheObject)}或{@link SimpleCache#put(Object, Object)}向缓存中put元素</li>
  * <li>使用{@link SimpleCache#get(Object)}从缓存中get元素</li>
+ * <li>使用{@link SimpleCache#loadCache(String)}从文件中恢复缓存</li>
+ * <li>使用{@link SimpleCache#saveCache(String, SimpleCache)}保存缓存到文件</li>
  * </ul>
  * <ul>
  * 缓存初始化
@@ -41,7 +45,9 @@ import com.trinea.java.common.service.CacheFullRemoveType;
  * 
  * @author Trinea 2011-12-23 上午01:46:01
  */
-public class SimpleCache<K, V> implements Cache<K, V> {
+public class SimpleCache<K, V> implements Cache<K, V>, Serializable {
+
+    private static final long            serialVersionUID = 1L;
 
     /** 默认缓存最大容量 **/
     public static final int              DEFAULT_MAX_SIZE = 64;
@@ -416,5 +422,28 @@ public class SimpleCache<K, V> implements Cache<K, V> {
     public synchronized double getHitRate() {
         long total = hitCount.get() + missCount.get();
         return (total == 0 ? 0 : ((double)hitCount.get()) / total);
+    }
+
+    /**
+     * 从文件中恢复缓存
+     * 
+     * @param filePath 文件路径
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <K, V> SimpleCache<K, V> loadCache(String filePath) {
+        return (SimpleCache<K, V>)SerializeUtils.deserialization(filePath);
+    }
+
+    /**
+     * 保存缓存到文件
+     * 
+     * @param <K>
+     * @param <V>
+     * @param filePath 文件路径
+     * @param cache 缓存
+     */
+    public static <K, V> void saveCache(String filePath, SimpleCache<K, V> cache) {
+        SerializeUtils.serialization(filePath, cache);
     }
 }

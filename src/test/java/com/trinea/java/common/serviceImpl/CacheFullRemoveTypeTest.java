@@ -1,7 +1,8 @@
-package com.trinea.java.common.entity;
+package com.trinea.java.common.serviceImpl;
 
 import junit.framework.TestCase;
 
+import com.trinea.java.common.entity.CacheObject;
 import com.trinea.java.common.serviceImpl.RemoveTypeDataBig;
 import com.trinea.java.common.serviceImpl.RemoveTypeDataSmall;
 import com.trinea.java.common.serviceImpl.RemoveTypeEnterTimeFirst;
@@ -58,20 +59,40 @@ public class CacheFullRemoveTypeTest extends TestCase {
         obj2.setData(200);
         assertTrue(((new RemoveTypeNotRemove<Integer>()).compare(obj1, obj2)) == 0);
 
+        assertTrue(((new RemoveTypeEnterTimeFirst<Integer>()).compare(obj2, obj1)) > 0);
+        assertTrue(((new RemoveTypeEnterTimeFirst<Integer>()).compare(obj1, obj1)) == 0);
         assertTrue(((new RemoveTypeEnterTimeFirst<Integer>()).compare(obj1, obj2)) < 0);
         assertTrue(((new RemoveTypeEnterTimeLast<Integer>()).compare(obj1, obj2)) > 0);
+        assertTrue(((new RemoveTypeEnterTimeLast<Integer>()).compare(obj2, obj1)) < 0);
+        assertTrue(((new RemoveTypeEnterTimeLast<Integer>()).compare(obj1, obj1)) == 0);
 
         assertTrue(((new RemoveTypeLastUsedTimeFirst<Integer>()).compare(obj1, obj2)) < 0);
+        assertTrue(((new RemoveTypeLastUsedTimeFirst<Integer>()).compare(obj1, obj1)) == 0);
+        assertTrue(((new RemoveTypeLastUsedTimeFirst<Integer>()).compare(obj2, obj1)) > 0);
         assertTrue(((new RemoveTypeLastUsedTimeLast<Integer>()).compare(obj1, obj2)) > 0);
+        assertTrue(((new RemoveTypeLastUsedTimeLast<Integer>()).compare(obj1, obj1)) == 0);
+        assertTrue(((new RemoveTypeLastUsedTimeLast<Integer>()).compare(obj2, obj1)) < 0);
 
         assertTrue(((new RemoveTypePriorityLow<Integer>()).compare(obj1, obj2)) < 0);
+        assertTrue(((new RemoveTypePriorityLow<Integer>()).compare(obj1, obj1)) == 0);
+        assertTrue(((new RemoveTypePriorityLow<Integer>()).compare(obj2, obj1)) > 0);
         assertTrue(((new RemoveTypePriorityHigh<Integer>()).compare(obj1, obj2)) > 0);
+        assertTrue(((new RemoveTypePriorityHigh<Integer>()).compare(obj1, obj1)) == 0);
+        assertTrue(((new RemoveTypePriorityHigh<Integer>()).compare(obj2, obj1)) < 0);
 
         assertTrue(((new RemoveTypeUsedCountSmall<Integer>()).compare(obj1, obj2)) < 0);
+        assertTrue(((new RemoveTypeUsedCountSmall<Integer>()).compare(obj1, obj1)) == 0);
+        assertTrue(((new RemoveTypeUsedCountSmall<Integer>()).compare(obj2, obj1)) > 0);
         assertTrue(((new RemoveTypeUsedCountBig<Integer>()).compare(obj1, obj2)) > 0);
+        assertTrue(((new RemoveTypeUsedCountBig<Integer>()).compare(obj1, obj1)) == 0);
+        assertTrue(((new RemoveTypeUsedCountBig<Integer>()).compare(obj2, obj1)) < 0);
 
         assertTrue(((new RemoveTypeDataSmall<Integer>()).compare(obj1, obj2)) < 0);
+        assertTrue(((new RemoveTypeDataSmall<Integer>()).compare(obj1, obj1)) == 0);
+        assertTrue(((new RemoveTypeDataSmall<Integer>()).compare(obj2, obj1)) > 0);
         assertTrue(((new RemoveTypeDataBig<Integer>()).compare(obj1, obj2)) > 0);
+        assertTrue(((new RemoveTypeDataBig<Integer>()).compare(obj1, obj1)) == 0);
+        assertTrue(((new RemoveTypeDataBig<Integer>()).compare(obj2, obj1)) < 0);
 
         obj1.setPriority(1);
         obj2.setPriority(1);

@@ -159,12 +159,14 @@ public class ListUtilsTest extends TestCase {
 
     public void testInvertList() {
         List<String> sourceList = new ArrayList<String>();
+        List<String> invertList = ListUtils.invertList(sourceList);
+        assertTrue(invertList.size() == 0);
         sourceList.add("a");
         sourceList.add("b");
         sourceList.add("c");
         sourceList.add("d");
         sourceList.add("e");
-        List<String> invertList = ListUtils.invertList(sourceList);
+        invertList = ListUtils.invertList(sourceList);
         int sourceSize = sourceList.size();
         assertEquals(sourceSize, invertList.size());
         for (int i = 0; i < sourceSize; i++) {

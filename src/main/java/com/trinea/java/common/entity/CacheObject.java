@@ -2,12 +2,14 @@ package com.trinea.java.common.entity;
 
 import java.io.Serializable;
 
+import com.trinea.java.common.ObjectUtils;
+
 /**
  * 缓存中的数据
  * 
  * @author Trinea 2011-12-23 上午01:27:06
  */
-public class CacheObject<V> implements Serializable {
+public class CacheObject<V> implements Serializable, Comparable<CacheObject<V>> {
 
     private static final long serialVersionUID = 1L;
 
@@ -91,5 +93,27 @@ public class CacheObject<V> implements Serializable {
 
     public void setData(V data) {
         this.data = data;
+    }
+
+    /**
+     * 仅对data字段进行比较
+     * 
+     * @param o
+     * @return
+     */
+    @Override
+    public int compareTo(CacheObject<V> o) {
+        return o == null ? 1 : ObjectUtils.compare(this.getData(), o.getData());
+    }
+
+    @SuppressWarnings("unchecked")
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+
+        CacheObject<V> obj = (CacheObject<V>)(o);
+        return (ObjectUtils.isEquals(this.getData(), obj.getData()) && this.getEnterTime() == obj.getEnterTime()
+                && this.getPriority() == obj.getPriority() && this.isExpired == obj.isExpired && this.isForever == obj.isForever);
     }
 }

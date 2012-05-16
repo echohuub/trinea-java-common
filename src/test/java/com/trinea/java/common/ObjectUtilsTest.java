@@ -91,7 +91,7 @@ public class ObjectUtilsTest extends TestCase {
             public boolean equals(Object obj) {
                 if (obj instanceof TestClassWithEqualFun) {
                     TestClassWithEqualFun testClassWithEqualFun2 = (TestClassWithEqualFun)obj;
-                    return (this.number == testClassWithEqualFun2.number && this.value == testClassWithEqualFun2.value);
+                    return (this.number == testClassWithEqualFun2.number && this.value.equals(testClassWithEqualFun2.value));
                 }
                 return false;
             }

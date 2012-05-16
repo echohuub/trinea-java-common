@@ -2,11 +2,11 @@ package com.trinea.java.common;
 
 import java.util.Arrays;
 
+import junit.framework.TestCase;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import junit.framework.TestCase;
 
 public class JSONUtilsTest extends TestCase {
 
@@ -150,10 +150,11 @@ public class JSONUtilsTest extends TestCase {
 
         String[] defaultArray = {"-1"};
         String[] targetArray = {"a", "b"};
-        assertEquals(JSONUtils.getStringArray(nullJsonObject, null, defaultArray), defaultArray);
-        assertEquals(JSONUtils.getStringArray(jsonObject, null, defaultArray), defaultArray);
+        assertTrue(JSONUtils.getStringArray(nullJsonObject, null, defaultArray).equals(defaultArray));
+        assertTrue(JSONUtils.getStringArray(jsonObject, null, defaultArray).equals(defaultArray));
 
-        assertEquals(JSONUtils.getStringArray(emptyJsonObject, "StringArray", defaultArray), defaultArray);
+        assertTrue(JSONUtils.getStringArray(jsonObject, "StringArrayNo", defaultArray).equals(defaultArray));
+        assertTrue(JSONUtils.getStringArray(emptyJsonObject, "StringArray", defaultArray).equals(defaultArray));
         assertEquals(ListUtils.join(Arrays.asList(JSONUtils.getStringArray(jsonObject, "StringArray", defaultArray))),
                      ListUtils.join(Arrays.asList(targetArray)));
     }
@@ -164,14 +165,14 @@ public class JSONUtilsTest extends TestCase {
 
         String[] defaultArray = {"-1"};
         String[] targetArray = {"a", "b"};
-        assertEquals(JSONUtils.getStringArray(nullString, null, defaultArray), defaultArray);
-        assertEquals(JSONUtils.getStringArray(stringObject, null, defaultArray), defaultArray);
+        assertTrue(JSONUtils.getStringArray(nullString, null, defaultArray).equals(defaultArray));
+        assertTrue(JSONUtils.getStringArray(stringObject, null, defaultArray).equals(defaultArray));
 
-        assertEquals(JSONUtils.getStringArray("[]", "StringArray", defaultArray), defaultArray);
-        assertEquals(JSONUtils.getStringArray(emptyString, "StringArray", defaultArray), defaultArray);
+        assertTrue(JSONUtils.getStringArray("[]", "StringArray", defaultArray).equals(defaultArray));
+        assertTrue(JSONUtils.getStringArray(emptyString, "StringArray", defaultArray).equals(defaultArray));
         assertEquals(ListUtils.join(Arrays.asList(JSONUtils.getStringArray(stringObject, "StringArray", defaultArray))),
                      ListUtils.join(Arrays.asList(targetArray)));
-        assertEquals(JSONUtils.getStringArray(errotrStringbject, "StringArray", defaultArray), defaultArray);
+        assertTrue(JSONUtils.getStringArray(errotrStringbject, "StringArray", defaultArray).equals(defaultArray));
     }
 
     public void testGetJSONObjectJSONObjectStringJSONObject() {
