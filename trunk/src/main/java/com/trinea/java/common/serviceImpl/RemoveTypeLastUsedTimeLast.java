@@ -17,6 +17,8 @@ import com.trinea.java.common.service.CacheFullRemoveType;
  */
 public class RemoveTypeLastUsedTimeLast<T> implements CacheFullRemoveType<T> {
 
+    private static final long serialVersionUID = 1L;
+
     @Override
     public int compare(CacheObject<T> obj1, CacheObject<T> obj2) {
         return (obj2.getLastUsedTime() > obj1.getLastUsedTime()) ? 1 : ((obj2.getLastUsedTime() == obj1.getLastUsedTime()) ? 0 : -1);

@@ -18,6 +18,8 @@ import com.trinea.java.common.service.CacheFullRemoveType;
  */
 public class RemoveTypeDataSmall<T> implements CacheFullRemoveType<T> {
 
+    private static final long serialVersionUID = 1L;
+
     @Override
     public int compare(CacheObject<T> obj1, CacheObject<T> obj2) {
         return ObjectUtils.compare(obj1.getData(), obj2.getData());

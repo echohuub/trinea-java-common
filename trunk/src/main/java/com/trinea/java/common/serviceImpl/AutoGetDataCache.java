@@ -1,5 +1,6 @@
 package com.trinea.java.common.serviceImpl;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -7,6 +8,7 @@ import java.util.concurrent.CountDownLatch;
 
 import com.trinea.java.common.ListUtils;
 import com.trinea.java.common.ObjectUtils;
+import com.trinea.java.common.SerializeUtils;
 import com.trinea.java.common.entity.CacheObject;
 import com.trinea.java.common.service.CacheFullRemoveType;
 
@@ -22,6 +24,8 @@ import com.trinea.java.common.service.CacheFullRemoveType;
  * {@link AutoGetDataCache#DEFAULT_BACK_CACHE_SIZE}</li>
  * <li>使用{@link AutoGetDataCache#getAndAutoCacheNewData(Object, List)}get某个key，并且会自动获取新数据进行缓存</li>
  * <li>使用{@link AutoGetDataCache#get(Object)}get某个key，但不会自动获取新数据进行缓存</li>
+ * <li>使用{@link AutoGetDataCache#loadCache(String)}从文件中恢复缓存</li>
+ * <li>使用{@link AutoGetDataCache#saveCache(String, SimpleCache)}保存缓存到文件</li>
  * </ul>
  * <ul>
  * 缓存初始化
@@ -35,23 +39,25 @@ import com.trinea.java.common.service.CacheFullRemoveType;
  */
 public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
 
+    private static final long               serialVersionUID           = 1L;
+
     /** 默认自动向前缓存的个数 **/
-    private static final int       DEFAULT_FORWARD_CACHE_SIZE = 3;
+    private static final int                DEFAULT_FORWARD_CACHE_SIZE = 3;
 
     /** 默认自动向后缓存的个数 **/
-    private static final int       DEFAULT_BACK_CACHE_SIZE    = 1;
+    private static final int                DEFAULT_BACK_CACHE_SIZE    = 1;
 
     /** 自动向前缓存的个数，默认个数为{@link AutoGetDataCache#DEFAULT_FORWARD_CACHE_SIZE} **/
-    private volatile int           forwardCacheNumber         = DEFAULT_FORWARD_CACHE_SIZE;
+    private volatile int                    forwardCacheNumber         = DEFAULT_FORWARD_CACHE_SIZE;
 
     /** 自动向后缓存的个数 ，默认个数为{@link AutoGetDataCache#DEFAULT_BACK_CACHE_SIZE} **/
-    private volatile int           backCacheNumber            = DEFAULT_BACK_CACHE_SIZE;
+    private volatile int                    backCacheNumber            = DEFAULT_BACK_CACHE_SIZE;
 
     /** 获取数据的接口 **/
-    private GetDataInterface<K, V> getDataInterface;
+    private GetDataInterface<K, V>          getDataInterface;
 
     /** 存储正在获取数据的线程，防止多个线程同时获取某个key，同时可以获取某个线程的相关信息 **/
-    private Map<K, GetDataThread>  gettingDataThreadMap       = new ConcurrentHashMap<K, GetDataThread>();
+    private transient Map<K, GetDataThread> gettingDataThreadMap       = new ConcurrentHashMap<K, GetDataThread>();
 
     /**
      * 获取某个key对应的值，并自动获取新数据进行缓存。如果只获取key对应值不获取新数据进行缓存，可使用{@link AutoGetDataCache#get(Object)}
@@ -98,7 +104,7 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
                 try {
                     getDataThread.getLatch().await();
                 } catch (InterruptedException e) {
-                    throw new RuntimeException("InterruptedException occurred", e);
+                    throw new RuntimeException("InterruptedException occurred. ", e);
                 }
             }
             object = super.get(key);
@@ -312,11 +318,22 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
     }
 
     /**
+     * 从文件中恢复缓存
+     * 
+     * @param filePath 文件路径
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <K, V> AutoGetDataCache<K, V> loadCache(String filePath) {
+        return (AutoGetDataCache<K, V>)SerializeUtils.deserialization(filePath);
+    }
+
+    /**
      * 获取新数据的类
      * 
      * @author Trinea 2012-3-4 下午01:34:27
      */
-    public interface GetDataInterface<K, V> {
+    public interface GetDataInterface<K, V> extends Serializable {
 
         /**
          * 获取数据的方法

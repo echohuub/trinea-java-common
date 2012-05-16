@@ -89,7 +89,7 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
             try {
                 return URLEncoder.encode(str, "UTF-8");
             } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("UnsupportedEncodingException occurred", e);
+                throw new RuntimeException("UnsupportedEncodingException occurred. ", e);
             }
         }
         return str;

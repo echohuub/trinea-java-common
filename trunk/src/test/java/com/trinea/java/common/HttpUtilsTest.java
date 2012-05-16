@@ -224,7 +224,13 @@ public class HttpUtilsTest extends TestCase {
         assertEquals(HttpUtils.httpGet(null), null);
         assertEquals(HttpUtils.httpGet(""), null);
         assertFalse(StringUtils.isEmpty(HttpUtils.httpGet("http://www.baidu.com/")));
-        assertTrue(StringUtils.isEmpty(HttpUtils.httpGet("www.baidu.com")));
+
+        try {
+            StringUtils.isEmpty(HttpUtils.httpGet("www.baidu.com"));
+            assertTrue(false);
+        } catch (Exception e) {
+            assertTrue(true);
+        }
     }
 
     public void testHttpGetStringString() {
@@ -232,8 +238,18 @@ public class HttpUtilsTest extends TestCase {
         assertEquals(HttpUtils.httpGet("", ""), null);
         assertFalse(StringUtils.isEmpty(HttpUtils.httpGet("http://www.baidu.com/", "")));
         assertFalse(StringUtils.isEmpty(HttpUtils.httpGet("http://www.baidu.com/", "wd=a")));
-        assertTrue(StringUtils.isEmpty(HttpUtils.httpGet("www.baidu.com")));
-        assertTrue(StringUtils.isEmpty(HttpUtils.httpGet("www.baidu.com", "wd=a")));
+        try {
+            StringUtils.isEmpty(HttpUtils.httpGet("www.baidu.com"));
+            assertTrue(false);
+        } catch (Exception e) {
+            assertTrue(true);
+        }
+        try {
+            StringUtils.isEmpty(HttpUtils.httpGet("www.baidu.com", "wd=a"));
+            assertTrue(false);
+        } catch (Exception e) {
+            assertTrue(true);
+        }
     }
 
     public void testHttpGetStringMapOfStringString() {
@@ -256,7 +272,12 @@ public class HttpUtilsTest extends TestCase {
         assertEquals(HttpUtils.httpPost(null, ""), null);
         assertEquals(HttpUtils.httpPost("", ""), null);
         assertTrue(StringUtils.isEmpty(HttpUtils.httpPost("http://www.baidu.com/", "")));
-        assertTrue(StringUtils.isEmpty(HttpUtils.httpPost("www.baidu.com", "")));
+        try {
+            StringUtils.isEmpty(HttpUtils.httpPost("www.baidu.com", ""));
+            assertTrue(false);
+        } catch (Exception e) {
+            assertTrue(true);
+        }
     }
 
     public void testHttpPostStringMapOfStringString() {

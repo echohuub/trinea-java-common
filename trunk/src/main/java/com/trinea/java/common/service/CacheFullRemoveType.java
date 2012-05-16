@@ -1,5 +1,7 @@
 package com.trinea.java.common.service;
 
+import java.io.Serializable;
+
 import com.trinea.java.common.entity.CacheObject;
 
 /**
@@ -7,7 +9,7 @@ import com.trinea.java.common.entity.CacheObject;
  * 
  * @author Trinea 2011-12-26 下午11:40:39
  */
-public interface CacheFullRemoveType<V> {
+public interface CacheFullRemoveType<V> extends Serializable {
 
     /**
      * 比较两个数据<br/>

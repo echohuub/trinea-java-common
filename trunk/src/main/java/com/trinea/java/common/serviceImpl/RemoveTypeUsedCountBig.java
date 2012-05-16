@@ -17,6 +17,8 @@ import com.trinea.java.common.service.CacheFullRemoveType;
  */
 public class RemoveTypeUsedCountBig<T> implements CacheFullRemoveType<T> {
 
+    private static final long serialVersionUID = 1L;
+
     @Override
     public int compare(CacheObject<T> obj1, CacheObject<T> obj2) {
         return (obj2.getUsedCount() > obj1.getUsedCount()) ? 1 : ((obj2.getUsedCount() == obj1.getUsedCount()) ? 0 : -1);

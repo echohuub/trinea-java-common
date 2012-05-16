@@ -347,7 +347,7 @@ public class HttpUtils {
      *         <ul>
      *         <li>若url为null，返回null</li>
      *         <li>若url为空字符串，返回空字符串</li>
-     *         <li>若url编码异常，返回null</li>
+     *         <li>若url编码异常，抛出异常</li>
      *         </ul>
      */
     public static String utf8Encode(String url) {
@@ -355,8 +355,7 @@ public class HttpUtils {
             try {
                 return URLEncoder.encode(url, "UTF-8");
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-                return null;
+                throw new RuntimeException("UnsupportedEncodingException occurred. ", e);
             }
         }
         return url;
@@ -378,7 +377,7 @@ public class HttpUtils {
      *         <ul>
      *         <li>若url为null，返回null</li>
      *         <li>若url为空字符串，返回空字符串</li>
-     *         <li>若url编码异常，返回null</li>
+     *         <li>若url编码异常，抛出异常</li>
      *         </ul>
      */
     public static String utf8Decode(String url) {
@@ -386,8 +385,7 @@ public class HttpUtils {
             try {
                 return URLDecoder.decode(url, "UTF-8");
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-                return null;
+                throw new RuntimeException("UnsupportedEncodingException occurred. ", e);
             }
         }
         return url;
@@ -502,16 +500,11 @@ public class HttpUtils {
             }
             return httpGet.getResponseBodyAsString();
         } catch (Exception e) {
-            try {
-                throw e;
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
+            throw new RuntimeException("Exception occurred. ", e);
         } finally {
             httpGet.releaseConnection();
             httpClient = null;
         }
-        return null;
     }
 
     /**
@@ -610,16 +603,11 @@ public class HttpUtils {
             }
             return httpPost.getResponseBodyAsString();
         } catch (Exception e) {
-            try {
-                throw e;
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
+            throw new RuntimeException("Exception occurred. ", e);
         } finally {
             httpPost.releaseConnection();
             httpClient = null;
         }
-        return null;
     }
 
     /**
@@ -716,16 +704,11 @@ public class HttpUtils {
             }
             return httpPost.getResponseBodyAsString();
         } catch (Exception e) {
-            try {
-                throw e;
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
+            throw new RuntimeException("Exception occurred. ", e);
         } finally {
             httpPost.releaseConnection();
             httpClient = null;
         }
-        return null;
     }
 
     /**

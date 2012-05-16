@@ -2,10 +2,13 @@ package com.trinea.java.common.serviceImpl;
 
 import junit.framework.TestCase;
 
+import com.trinea.java.common.FileUtils;
 import com.trinea.java.common.entity.CacheObject;
 import com.trinea.java.common.utils.SleepUtils;
 
 public class SimpleCacheTest extends TestCase {
+
+    private static final String BASE_DIR        = "C:\\Users\\Trinea\\Desktop\\temp\\JavaCommonTest\\SimpleCacheTest\\";
 
     SimpleCache<String, String> cache1;
     SimpleCache<String, String> cache2;
@@ -16,11 +19,25 @@ public class SimpleCacheTest extends TestCase {
     long                        cache1ValidTime = 1000;
 
     protected void setUp() throws Exception {
+        super.setUp();
+        FileUtils.makeFolder(BASE_DIR);
         cache1 = new SimpleCache<String, String>(cache3MaxSize, cache1ValidTime, new RemoveTypeEnterTimeFirst<String>());
         cache2 = new SimpleCache<String, String>(cache2MaxSize, -1, new RemoveTypeNotRemove<String>());
+        cache2 = new SimpleCache<String, String>(cache2MaxSize, new RemoveTypeNotRemove<String>());
+        try {
+            cache2 = new SimpleCache<String, String>(-1, -1, new RemoveTypeNotRemove<String>());
+            assertTrue(false);
+        } catch (Exception e) {
+            assertTrue(true);
+        }
+        try {
+            cache2 = new SimpleCache<String, String>(cache2MaxSize, -1, null);
+            assertTrue(false);
+        } catch (Exception e) {
+            assertTrue(true);
+        }
         cache3 = new SimpleCache<String, String>(cache3MaxSize);
         cache4 = new SimpleCache<String, String>();
-        super.setUp();
     }
 
     protected void tearDown() throws Exception {
@@ -48,6 +65,7 @@ public class SimpleCacheTest extends TestCase {
         SimpleCache<String, String> cache6 = null;
         try {
             cache6 = new SimpleCache<String, String>(-1);
+            assertTrue(false);
         } catch (Exception e) {
             assertTrue(cache6 == null);
         }
@@ -305,6 +323,7 @@ public class SimpleCacheTest extends TestCase {
         int cacheSize = 5, putSize = cacheSize + 3;
         SimpleCache<String, String> cache = new SimpleCache<String, String>(cacheSize, -1,
                                                                             new RemoveTypePriorityLow<String>());
+        assertTrue(cache.getHitRate() - 0 < 0.0001);
         for (int i = 1; i <= putSize; i++) {
             CacheObject<String> obj = new CacheObject<String>();
             obj.setData(Integer.toString(i));
@@ -318,5 +337,28 @@ public class SimpleCacheTest extends TestCase {
         assertEquals(cache.getHitCount(), 2);
         assertEquals(cache.getMissCount(), 2);
         assertEquals(cache.getHitRate(), 0.5);
+    }
+
+    public void testSaveAndLoadData() {
+        int cacheSize = 30, putSize = 50;
+        SimpleCache<String, String> cache = new SimpleCache<String, String>(cacheSize, -1,
+                                                                            new RemoveTypePriorityLow<String>());
+        for (int i = 1; i <= putSize; i++) {
+            CacheObject<String> obj = new CacheObject<String>();
+            obj.setData(Integer.toString(i));
+            obj.setPriority(i);
+            cache.put(Integer.toString(i), obj);
+        }
+        SimpleCache.saveCache(BASE_DIR + "simplecache.obj", cache);
+        SimpleCache<String, String> outCache = SimpleCache.loadCache(BASE_DIR + "simplecache.obj");
+
+        assertEquals(cache.getSize(), 30);
+        assertEquals(outCache.getMaxSize(), 30);
+        assertTrue(outCache.getCacheFullRemoveType() instanceof RemoveTypePriorityLow);
+        assertEquals(cache.getSize(), outCache.getSize());
+        for (int i = putSize - cacheSize + 1; i <= putSize; i++) {
+            assertNotNull(cache.get(Integer.toString(i)));
+            assertEquals(cache.get(Integer.toString(i)), outCache.get(Integer.toString(i)));
+        }
     }
 }
