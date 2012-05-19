@@ -10,7 +10,7 @@ import junit.framework.TestCase;
 import com.trinea.java.common.FileUtils;
 import com.trinea.java.common.ObjectUtils;
 import com.trinea.java.common.entity.CacheObject;
-import com.trinea.java.common.serviceImpl.AutoGetDataCache.GetDataInterface;
+import com.trinea.java.common.serviceImpl.AutoGetDataCache.OnGetDataListener;
 import com.trinea.java.common.utils.SleepUtils;
 
 /**
@@ -43,36 +43,36 @@ public class AutoGetDataCacheTest extends TestCase {
 
         // 新建缓存
         AutoGetDataCache<String, String> cache = null;
-        cache = new AutoGetDataCache<String, String>(5, new GetDataInterface<String, String>() {
+        cache = new AutoGetDataCache<String, String>(5, new OnGetDataListener<String, String>() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public CacheObject<String> getData(String key) {
+            public CacheObject<String> onGetData(String key) {
                 CacheObject<String> o = new CacheObject<String>();
                 o.setData(dataSource.get(key));
                 return o;
             }
         });
         assertNotNull(cache);
-        cache = new AutoGetDataCache<String, String>(new GetDataInterface<String, String>() {
+        cache = new AutoGetDataCache<String, String>(new OnGetDataListener<String, String>() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public CacheObject<String> getData(String key) {
+            public CacheObject<String> onGetData(String key) {
                 CacheObject<String> o = new CacheObject<String>();
                 o.setData(dataSource.get(key));
                 return o;
             }
         });
         assertNotNull(cache);
-        cache = new AutoGetDataCache<String, String>(5, -1, new GetDataInterface<String, String>() {
+        cache = new AutoGetDataCache<String, String>(5, -1, new OnGetDataListener<String, String>() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            public CacheObject<String> getData(String key) {
+            public CacheObject<String> onGetData(String key) {
                 CacheObject<String> o = new CacheObject<String>();
                 o.setData(dataSource.get(key));
                 return o;
@@ -94,12 +94,12 @@ public class AutoGetDataCacheTest extends TestCase {
         // 新建缓存
         AutoGetDataCache<String, String> cache = null;
         cache = new AutoGetDataCache<String, String>(5, -1, new RemoveTypeEnterTimeFirst<String>(),
-                                                     new GetDataInterface<String, String>() {
+                                                     new OnGetDataListener<String, String>() {
 
                                                          private static final long serialVersionUID = 1L;
 
                                                          @Override
-                                                         public CacheObject<String> getData(String key) {
+                                                         public CacheObject<String> onGetData(String key) {
                                                              CacheObject<String> o = new CacheObject<String>();
                                                              o.setData(dataSource.get(key));
                                                              return o;
@@ -146,12 +146,12 @@ public class AutoGetDataCacheTest extends TestCase {
         // 新建缓存
         AutoGetDataCache<String, String> cache = null;
         cache = new AutoGetDataCache<String, String>(cacheSize, -1, new RemoveTypeEnterTimeFirst<String>(),
-                                                     new GetDataInterface<String, String>() {
+                                                     new OnGetDataListener<String, String>() {
 
                                                          private static final long serialVersionUID = 1L;
 
                                                          @Override
-                                                         public CacheObject<String> getData(String key) {
+                                                         public CacheObject<String> onGetData(String key) {
                                                              CacheObject<String> o = new CacheObject<String>();
                                                              o.setData(dataSource.get(key));
                                                              return o;
@@ -171,8 +171,8 @@ public class AutoGetDataCacheTest extends TestCase {
         assertTrue(FileUtils.isFileExist(saveFile));
         AutoGetDataCache<String, String> outCache = AutoGetDataCache.loadCache(saveFile);
         assertNotNull(outCache);
-        assertNotNull(outCache.getGetDataInterface());
-        assertTrue(outCache.getGetDataInterface() instanceof GetDataInterface);
+        assertNotNull(outCache.getOnGetDataListener());
+        assertTrue(outCache.getOnGetDataListener() instanceof OnGetDataListener);
         assertEquals(cache.getSize(), 30);
         assertEquals(outCache.getMaxSize(), 30);
         assertTrue(outCache.getCacheFullRemoveType() instanceof RemoveTypeEnterTimeFirst);

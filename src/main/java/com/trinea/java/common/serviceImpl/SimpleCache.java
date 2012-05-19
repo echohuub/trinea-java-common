@@ -29,6 +29,7 @@ import com.trinea.java.common.service.CacheFullRemoveType;
  * <li>{@link SimpleCache#SimpleCache(int, CacheFullRemoveType)}</li>
  * <li>{@link SimpleCache#SimpleCache(int)}</li>
  * <li>{@link SimpleCache#SimpleCache()}</li>
+ * <li>{@link SimpleCache#loadCache(String)}从文件中恢复缓存</li>
  * </ul>
  * <ul>
  * 对于<strong>缓存的大小</strong>
@@ -382,22 +383,6 @@ public class SimpleCache<K, V> implements Cache<K, V>, Serializable {
     protected boolean isExpired(CacheObject<V> obj) {
         return validTime != -1
                && (obj == null || obj.isExpired() || (obj.getEnterTime() + validTime) <= System.currentTimeMillis());
-    }
-
-    /**
-     * 获取数据的监听器，在获取到数据后进行调用
-     * 
-     * @author Trinea 2012-4-4 下午11:49:04
-     */
-    public interface GetDataListener<K, V> {
-
-        /**
-         * 数据监听方法，获取到数据后，执行该方法
-         * 
-         * @param key key
-         * @param value 数据
-         */
-        public void getDataListener(K key, CacheObject<V> value);
     }
 
     /**
