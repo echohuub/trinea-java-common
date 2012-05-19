@@ -1,11 +1,11 @@
 package com.trinea.java.common;
 
 /**
- * array工具类
+ * 数组工具类
  * <ul>
  * <li>继承自{@link org.apache.commons.lang3.ArrayUtils}</li>
- * <li>{@link ArrayUtils#getLast(Object[], Object, Object, boolean)}得到array中某个元素（第一次发现）的前一个元素</li>
- * <li>{@link ArrayUtils#getNext(Object[], Object, Object, boolean)}得到array中某个元素（第一次发现）的后一个元素</li>
+ * <li>{@link ArrayUtils#getLast(Object[], Object, Object, boolean)}得到array中某个元素（从前到后第一次匹配）的前一个元素</li>
+ * <li>{@link ArrayUtils#getNext(Object[], Object, Object, boolean)}得到array中某个元素（从前到后第一次匹配）的后一个元素</li>
  * </ul>
  * 
  * @author Trinea 2011-10-24 下午08:21:11
@@ -13,7 +13,7 @@ package com.trinea.java.common;
 public class ArrayUtils extends org.apache.commons.lang3.ArrayUtils {
 
     /**
-     * 得到array中某个元素（第一次发现）的前一个元素
+     * 得到array中某个元素（从前到后第一次匹配）的前一个元素
      * <ul>
      * <li>若数组为空，返回defaultValue</li>
      * <li>若数组中未找到value，返回defaultValue</li>
@@ -51,7 +51,7 @@ public class ArrayUtils extends org.apache.commons.lang3.ArrayUtils {
     }
 
     /**
-     * 得到array中某个元素（第一次发现）的后一个元素
+     * 得到array中某个元素（从前到后第一次匹配）的后一个元素
      * <ul>
      * <li>若数组为空，返回defaultValue</li>
      * <li>若数组中未找到value，返回defaultValue</li>

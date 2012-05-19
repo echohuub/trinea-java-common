@@ -21,7 +21,7 @@ import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 
 /**
- * 通用的http工具函数
+ * http工具函数
  * 
  * @author Trinea 2011-9-18 下午11:17:34
  */

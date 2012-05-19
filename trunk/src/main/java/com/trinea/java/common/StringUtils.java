@@ -153,7 +153,7 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     }
 
 /**
-     * html的转移字符转换成正常的字符串
+     * html的转义字符转换成正常的字符串
      * 
      * <pre>
      * htmlEscapeCharsToString(null) = null;

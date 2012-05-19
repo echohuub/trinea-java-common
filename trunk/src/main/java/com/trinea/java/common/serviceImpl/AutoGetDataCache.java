@@ -29,10 +29,11 @@ import com.trinea.java.common.service.CacheFullRemoveType;
  * </ul>
  * <ul>
  * 缓存初始化
- * <li>{@link AutoGetDataCache#AutoGetDataCache(GetDataInterface)}</li>
- * <li>{@link AutoGetDataCache#AutoGetDataCache(int, GetDataInterface)}</li>
- * <li>{@link AutoGetDataCache#AutoGetDataCache(int, long, GetDataInterface)}</li>
- * <li>{@link AutoGetDataCache#AutoGetDataCache(int, long, CacheFullRemoveType, GetDataInterface)}</li>
+ * <li>{@link AutoGetDataCache#AutoGetDataCache(OnGetDataListener)}</li>
+ * <li>{@link AutoGetDataCache#AutoGetDataCache(int, OnGetDataListener)}</li>
+ * <li>{@link AutoGetDataCache#AutoGetDataCache(int, long, OnGetDataListener)}</li>
+ * <li>{@link AutoGetDataCache#AutoGetDataCache(int, long, CacheFullRemoveType, OnGetDataListener)}</li>
+ * <li>{@link AutoGetDataCache#loadCache(String)}从文件中恢复缓存</li>
  * </ul>
  * 
  * @author Trinea 2012-3-4 下午12:39:17
@@ -54,7 +55,7 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
     private volatile int                    backCacheNumber            = DEFAULT_BACK_CACHE_SIZE;
 
     /** 获取数据的接口 **/
-    private GetDataInterface<K, V>          getDataInterface;
+    private OnGetDataListener<K, V>         onGetDataListener;
 
     /** 存储正在获取数据的线程，防止多个线程同时获取某个key，同时可以获取某个线程的相关信息 **/
     private transient Map<K, GetDataThread> gettingDataThreadMap       = new ConcurrentHashMap<K, GetDataThread>();
@@ -83,7 +84,7 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
      * <ul>
      * <li>若该key为null，返回null</li>
      * <li>若key已在缓存中，返回该key对应的值</li>
-     * <li>若key不在缓存中，会自动调用其{@link GetDataInterface#getData(Object)}方法获取数据将其返回，getData为null时返回null</li>
+     * <li>若key不在缓存中，会自动调用其{@link OnGetDataListener#onGetData(Object)}方法获取数据将其返回，getData为null时返回null</li>
      * </ul>
      * 
      * @param key
@@ -208,7 +209,7 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
             return gettingDataThreadMap.get(key);
         }
 
-        GetDataThread getDataThread = new GetDataThread(this, key, getDataInterface);
+        GetDataThread getDataThread = new GetDataThread(this, key, onGetDataListener);
         gettingDataThreadMap.put(key, getDataThread);
         getDataThread.start();
         return getDataThread;
@@ -221,12 +222,12 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
      * @param maxSize 缓存最大容量
      * @param validTime 缓存中元素有效时间，小于0表示元素不会失效，失效规则见{@link SimpleCache#isExpired(CacheObject)}的实现类
      * @param cacheFullRemoveType cache满时删除元素类型，见{@link CacheFullRemoveType}
-     * @param getDataInterface 获取数据的方法
+     * @param onGetDataListener 获取数据的方法
      */
     public AutoGetDataCache(int maxSize, long validTime, CacheFullRemoveType<V> cacheFullRemoveType,
-                            GetDataInterface<K, V> getDataInterface){
+                            OnGetDataListener<K, V> onGetDataListener){
         super(maxSize, validTime, cacheFullRemoveType);
-        this.getDataInterface = getDataInterface;
+        this.onGetDataListener = onGetDataListener;
     }
 
     /**
@@ -234,33 +235,33 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
      * 
      * @param maxSize 缓存最大容量
      * @param validTime 缓存中元素有效时间，小于0表示元素不会失效，失效规则见{@link SimpleCache#isExpired(CacheObject)}的实现类
-     * @param getDataInterface 获取数据的方法
+     * @param onGetDataListener 获取数据的方法
      */
-    public AutoGetDataCache(int maxSize, long validTime, GetDataInterface<K, V> getDataInterface){
+    public AutoGetDataCache(int maxSize, long validTime, OnGetDataListener<K, V> onGetDataListener){
         super(maxSize, validTime);
-        this.getDataInterface = getDataInterface;
+        this.onGetDataListener = onGetDataListener;
     }
 
     /**
      * 构造函数，初始化缓存，默认元素不会失效，cache满时删除元素类型为{@link RemoveTypeEnterTimeFirst}
      * 
      * @param maxSize 缓存最大容量
-     * @param getDataInterface 获取数据的方法
+     * @param onGetDataListener 获取数据的方法
      * @param 其他参数 见{@link SimpleCache#SimpleCache(int)}
      */
-    public AutoGetDataCache(int maxSize, GetDataInterface<K, V> getDataInterface){
+    public AutoGetDataCache(int maxSize, OnGetDataListener<K, V> onGetDataListener){
         super(maxSize);
-        this.getDataInterface = getDataInterface;
+        this.onGetDataListener = onGetDataListener;
     }
 
     /**
      * 构造函数，初始化缓存，默认大小为{@link SimpleCache#DEFAULT_MAX_SIZE}，元素不会失效，cache满时删除元素类型为 {@link RemoveTypeEnterTimeFirst}
      * 
-     * @param getDataInterface 获取数据的方法
+     * @param onGetDataListener 获取数据的方法
      */
-    public AutoGetDataCache(GetDataInterface<K, V> getDataInterface){
+    public AutoGetDataCache(OnGetDataListener<K, V> onGetDataListener){
         super();
-        this.getDataInterface = getDataInterface;
+        this.onGetDataListener = onGetDataListener;
     }
 
     /**
@@ -302,19 +303,19 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
     /**
      * 得到获取数据的方法
      * 
-     * @return the getDataInterface
+     * @return the onGetDataListener
      */
-    public GetDataInterface<K, V> getGetDataInterface() {
-        return getDataInterface;
+    public OnGetDataListener<K, V> getOnGetDataListener() {
+        return onGetDataListener;
     }
 
     /**
      * 设置获取数据的方法
      * 
-     * @param getDataInterface
+     * @param onGetDataListener
      */
-    public void setGetDataInterface(GetDataInterface<K, V> getDataInterface) {
-        this.getDataInterface = getDataInterface;
+    public void setOnGetDataListener(OnGetDataListener<K, V> onGetDataListener) {
+        this.onGetDataListener = onGetDataListener;
     }
 
     /**
@@ -333,7 +334,7 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
      * 
      * @author Trinea 2012-3-4 下午01:34:27
      */
-    public interface GetDataInterface<K, V> extends Serializable {
+    public interface OnGetDataListener<K, V> extends Serializable {
 
         /**
          * 获取数据的方法
@@ -341,7 +342,7 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
          * @param key
          * @return
          */
-        public CacheObject<V> getData(K key);
+        public CacheObject<V> onGetData(K key);
     }
 
     /**
@@ -351,31 +352,31 @@ public class AutoGetDataCache<K, V> extends SimpleCache<K, V> {
      */
     protected class GetDataThread extends Thread {
 
-        private AutoGetDataCache<K, V> cache;
-        private K                      key;
-        private GetDataInterface<K, V> getDataInterface;
+        private AutoGetDataCache<K, V>  cache;
+        private K                       key;
+        private OnGetDataListener<K, V> onGetDataListener;
 
         /** put结束的锁 **/
-        private CountDownLatch         finishPutLock;
+        private CountDownLatch          finishPutLock;
 
         /**
          * 获取数据
          * 
          * @param cache 存储数据的缓存
          * @param key 获取数据的key
-         * @param getDataInterface 获取数据的接口
+         * @param onGetDataListener 获取数据的接口
          */
-        public GetDataThread(AutoGetDataCache<K, V> cache, K key, GetDataInterface<K, V> getDataInterface){
+        public GetDataThread(AutoGetDataCache<K, V> cache, K key, OnGetDataListener<K, V> onGetDataListener){
             super("GetDataThread whose key is " + key);
             this.cache = cache;
             this.key = key;
-            this.getDataInterface = getDataInterface;
+            this.onGetDataListener = onGetDataListener;
             finishPutLock = new CountDownLatch(1);
         }
 
         public void run() {
-            if (key != null && getDataInterface != null && cache != null) {
-                CacheObject<V> object = getDataInterface.getData(key);
+            if (key != null && onGetDataListener != null && cache != null) {
+                CacheObject<V> object = onGetDataListener.onGetData(key);
                 if (object != null) {
                     cache.put(key, object);
                 }
