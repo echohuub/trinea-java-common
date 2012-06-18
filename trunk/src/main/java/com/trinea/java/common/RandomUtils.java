@@ -23,7 +23,7 @@ public class RandomUtils {
     public static final String LOWER_CASE_LETTERS  = "abcdefghijklmnopqrstuvwxyz";
 
     /**
-     * 得到固定长度的随机字符串，字符串由数字和字母混合组成
+     * 得到固定长度的随机字符串，字符串由数字和大小写字母混合组成
      * 
      * @param length 长度
      * @return
@@ -45,7 +45,7 @@ public class RandomUtils {
     }
 
     /**
-     * 得到固定长度的随机字符串，字符串由字母混合组成
+     * 得到固定长度的随机字符串，字符串由大小写字母混合组成
      * 
      * @param length 长度
      * @return

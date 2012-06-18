@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 列表List工具类，用于实现一些list的常用操作
+ * List工具类，用于实现一些list的常用操作
  * 
  * @author Trinea 2011-7-22 上午12:37:10
  */
@@ -24,7 +24,7 @@ public class ListUtils {
      * @param sourceList
      * @return 若list为null或长度为0, 返回true; 否则返回false.
      */
-    public static boolean isEmpty(List<?> sourceList) {
+    public static <V> boolean isEmpty(List<V> sourceList) {
         return (sourceList == null || sourceList.size() == 0);
     }
 
@@ -158,7 +158,7 @@ public class ListUtils {
     }
 
     /**
-     * 向list中新增value
+     * 向list中新增非null value
      * 
      * @param sourceList
      * @param value

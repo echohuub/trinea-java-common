@@ -78,7 +78,7 @@ public class MapUtils {
     }
 
     /**
-     * 向map中put key和value对，key必须非null，并且为非空字符串，若value为null或者空字符串，put defaultValue。
+     * 向map中put key和value对，key必须非null，并且为非空字符串，若value为null或者空字符串，put defaultValue
      * 
      * @param map
      * @param key
