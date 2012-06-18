@@ -5,7 +5,7 @@ import java.io.Serializable;
 import com.trinea.java.common.entity.CacheObject;
 
 /**
- * 缓存满时清空数据的类型
+ * 缓存满时删除数据的类型
  * 
  * @author Trinea 2011-12-26 下午11:40:39
  */

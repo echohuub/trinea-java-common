@@ -12,7 +12,7 @@ import com.trinea.java.common.entity.CacheObject;
 import com.trinea.java.common.service.CacheFullRemoveType;
 
 /**
- * 缓存满时清空数据的类型--对象值小先删除
+ * 缓存满时删除数据的类型--对象值小先删除
  * 
  * @author Trinea 2012-5-10 上午01:15:50
  */
