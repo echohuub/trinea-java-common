@@ -115,19 +115,19 @@ public class AutoGetDataCacheTest extends TestCase {
         assertNull(cache.getAndAutoCacheNewData(null, null));
         assertTrue(value != null && ObjectUtils.isEquals(value.getData(), Integer.toString(0)));
         assertTrue(cache.getValidSize() == 1);
-        assertTrue(cache.getHitRate() == 1);
+        assertTrue(cache.getHitRate() == 0);
         value = cache.getAndAutoCacheNewData(Integer.toString(2), null);
         value = cache.getAndAutoCacheNewData(Integer.toString(2), keyList);
-        assertTrue(cache.getHitRate() == 1);
+        assertTrue(1 / 3 - cache.getHitRate() < 0.000001);
         assertTrue(value != null && ObjectUtils.isEquals(value.getData(), Integer.toString(2)));
         SleepUtils.sleep();
         if (cache.getValidSize() == 5) {
             value = cache.getAndAutoCacheNewData(Integer.toString(3), keyList);
-            assertTrue(cache.getHitRate() == 1);
+            assertTrue(cache.getHitRate() == 0.5);
             value = cache.getAndAutoCacheNewData(Integer.toString(4), keyList);
-            assertTrue(cache.getHitRate() == 1);
+            assertTrue(cache.getHitRate() == 0.6);
             value = cache.getAndAutoCacheNewData(Integer.toString(1), keyList);
-            assertTrue(cache.getHitRate() == 1);
+            assertTrue(2 / 3 - cache.getHitRate() < 0.00001);
         }
         value = cache.getAndAutoCacheNewData(Integer.toString(5), keyList);
     }
