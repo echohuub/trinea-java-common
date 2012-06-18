@@ -13,7 +13,7 @@ import com.trinea.java.common.entity.CacheObject;
 import com.trinea.java.common.service.CacheFullRemoveType;
 
 /**
- * <strong>自动获取新数据的缓存</strong>，适用于获取数据较耗时的应用，如网络通讯、响应慢数据量获取。<br/>
+ * <strong>自动获取新数据的缓存</strong>，适用于获取数据较耗时的应用，如网络通讯、响应慢数据获取。<br/>
  * <br/>
  * 可用来自动获取新数据进行缓存。支持前后双向多个数据缓存，使得数据获取效率大大提高，下次使用该数据时不用实时获取直接读取缓存即可<br/>
  * <br/>
