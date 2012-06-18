@@ -436,7 +436,7 @@ public class JSONUtils {
     }
 
     /**
-     * 将key和value键值对形式的json转换成map，结果会忽略key和value中的空格，忽略为空的key
+     * 将key和value键值对形式的json转换成map，忽略为空的key，在解析异常时put空字符串
      * 
      * @param sourceObj key和value键值对形式的json
      * @return
@@ -456,7 +456,7 @@ public class JSONUtils {
     }
 
     /**
-     * 将key和value键值对形式的json转换成map，结果会忽略key和value中的空格，忽略为空的key
+     * 将key和value键值对形式的json转换成map，忽略为空的key，在解析异常时put空字符串
      * 
      * @param source key和value键值对形式的json 字符串
      * @return
