@@ -55,16 +55,15 @@ public class AutoGetDataCacheDemo extends TestCase {
         AutoGetDataCache<String, String> cache = null;
         cache = new AutoGetDataCache<String, String>(new OnGetDataListener<String, String>() {
 
-             private static final long serialVersionUID = 1L;
+            private static final long serialVersionUID = 1L;
 
-             @Override
-             public CacheObject<String> onGetData(String key) {
-                 CacheObject<String> o = new CacheObject<String>();
-                 o.setData(getSlowResponseData());
-                 return o;
-             }
-         }, 5, -1,
-                                                     new RemoveTypeEnterTimeFirst<String>());
+            @Override
+            public CacheObject<String> onGetData(String key) {
+                CacheObject<String> o = new CacheObject<String>();
+                o.setData(getSlowResponseData());
+                return o;
+            }
+        }, 5, -1, new RemoveTypeEnterTimeFirst<String>());
 
         int count = 10;
         long start = 0, end = 0;
