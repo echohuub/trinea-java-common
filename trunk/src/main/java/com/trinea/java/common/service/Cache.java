@@ -41,10 +41,10 @@ public interface Cache<K, V> {
      * 向缓存中添加元素
      * 
      * @param key key
-     * @param obj 元素
+     * @param value 元素
      * @return
      */
-    public CacheObject<V> put(K key, CacheObject<V> obj);
+    public CacheObject<V> put(K key, CacheObject<V> value);
 
     /**
      * 将cache2中的所有元素复制到当前cache
